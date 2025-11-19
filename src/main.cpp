@@ -42,9 +42,10 @@ int main() {
         // Habilitar CORS para el frontend
         .registerPostHandlingAdvice(
             [](const HttpRequestPtr &req, const HttpResponsePtr &resp) {
-                resp->addHeader("Access-Control-Allow-Origin", "*");
+                resp->addHeader("Access-Control-Allow-Origin", "https://pachaqutec.com");
                 resp->addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
                 resp->addHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+                resp->addHeader("Access-Control-Allow-Credentials", "true");
             })
         // Configurar el cliente de base de datos con PostgresConfig
         .addDbClient(pgConfig)
