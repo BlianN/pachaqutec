@@ -42,7 +42,15 @@ int main() {
         // Habilitar CORS para el frontend
         .registerPostHandlingAdvice(
             [](const HttpRequestPtr &req, const HttpResponsePtr &resp) {
-                resp->addHeader("Access-Control-Allow-Origin", "https://pachaqutec.com");
+                // Obtener el origin de la petición
+                auto origin = req->getHeader("Origin");
+                
+                // Permitir estos dominios
+                if (origin == "https://pachaqutec.com" || 
+                    origin == "https://www.pachaqutec.com") {
+                    resp->addHeader("Access-Control-Allow-Origin", origin);
+                }
+                
                 resp->addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
                 resp->addHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
                 resp->addHeader("Access-Control-Allow-Credentials", "true");
