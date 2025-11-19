@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Fuente y ajustes generales */
+body {
+  font-family: 'Arial', sans-serif;
+  background-color: #F7F4EE;
+  margin: 0;
+  padding: 0;
+}
+
+/* Extra para simular la forma de las montañas */
+.clip-path-polygon {
+  clip-path: polygon(0% 100%, 20% 40%, 40% 80%, 60% 30%, 80% 70%, 100% 20%, 100% 100%);
+}

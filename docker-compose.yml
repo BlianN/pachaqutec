@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # Servicio de PostgreSQL
+  postgres:
+    image: postgres:15
+    container_name: pachaqutec-postgres
+    environment:
+      POSTGRES_USER: miusuario
+      POSTGRES_PASSWORD: mipassword
+      POSTGRES_DB: mi_base_datos
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - pachaqutec-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U miusuario -d mi_base_datos"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Servicio del backend Drogon (C++)
+  backend:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: pachaqutec-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: mi_base_datos
+      DB_USER: miusuario
+      DB_PASSWORD: mipassword
+    networks:
+      - pachaqutec-network
+    restart: unless-stopped
+
+  # Servicio del frontend React (Create React App)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # ✅ Variables de entorno para producción (Docker)
+        - REACT_APP_API_URL=/api
+        - REACT_APP_FIREBASE_API_KEY=AIzaSyBmPQUX0JQS13PPbtPA7QeC9V0ef2ZkcS0
+        - REACT_APP_FIREBASE_AUTH_DOMAIN=pachaqutec-turismo.firebaseapp.com
+        - REACT_APP_FIREBASE_PROJECT_ID=pachaqutec-turismo
+        - REACT_APP_FIREBASE_STORAGE_BUCKET=pachaqutec-turismo.firebasestorage.app
+        - REACT_APP_FIREBASE_MESSAGING_SENDER_ID=360035992776
+        - REACT_APP_FIREBASE_APP_ID=1:360035992776:web:f753c6ae83f1a0a7f411fd
+    container_name: pachaqutec-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - pachaqutec-network
+    restart: unless-stopped
+
+networks:
+  pachaqutec-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

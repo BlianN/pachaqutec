@@ -1,0 +1,329 @@
+@prefix : <https://pachaqutec.app/data#> .
+@prefix pq: <https://pachaqutec.app/ontology#> .
+@prefix schema: <http://schema.org/> .
+@prefix geo: <http://www.w3.org/2003/01/geo/wgs84_pos#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+# ============================================================
+# DATOS DE EJEMPLO - PACHAQUTEC
+# ============================================================
+# Este archivo muestra cómo se modelan los datos reales
+# de la aplicación usando la ontología PachaQutec
+# ============================================================
+
+# ============================================================
+# CATEGORÍAS TURÍSTICAS
+# ============================================================
+
+:CategoriaHistorico
+    a pq:TourismCategory ;
+    pq:databaseId 1 ;
+    schema:name "Histórico"@es ;
+    schema:description "Monumentos y sitios históricos de Arequipa"@es ;
+    pq:categoryIcon "🏛️" ;
+    pq:categoryColor "#667eea" ;
+    dct:created "2025-11-17T00:00:00Z"^^xsd:dateTime .
+
+:CategoriaNaturaleza
+    a pq:TourismCategory ;
+    pq:databaseId 2 ;
+    schema:name "Naturaleza"@es ;
+    schema:description "Paisajes naturales y aventuras al aire libre"@es ;
+    pq:categoryIcon "🏞️" ;
+    pq:categoryColor "#48bb78" ;
+    dct:created "2025-11-17T00:00:00Z"^^xsd:dateTime .
+
+:CategoriaGastronomia
+    a pq:TourismCategory ;
+    pq:databaseId 3 ;
+    schema:name "Gastronomía"@es ;
+    schema:description "Sabores tradicionales arequipeños"@es ;
+    pq:categoryIcon "🍲" ;
+    pq:categoryColor "#ed8936" ;
+    dct:created "2025-11-17T00:00:00Z"^^xsd:dateTime .
+
+:CategoriaCultural
+    a pq:TourismCategory ;
+    pq:databaseId 4 ;
+    schema:name "Cultural"@es ;
+    schema:description "Museos y expresiones culturales"@es ;
+    pq:categoryIcon "🎭" ;
+    pq:categoryColor "#9f7aea" ;
+    dct:created "2025-11-17T00:00:00Z"^^xsd:dateTime .
+
+:CategoriaReligioso
+    a pq:TourismCategory ;
+    pq:databaseId 5 ;
+    schema:name "Religioso"@es ;
+    schema:description "Iglesias y templos coloniales"@es ;
+    pq:categoryIcon "⛪" ;
+    pq:categoryColor "#4299e1" ;
+    dct:created "2025-11-17T00:00:00Z"^^xsd:dateTime .
+
+:CategoriaAventura
+    a pq:TourismCategory ;
+    pq:databaseId 6 ;
+    schema:name "Aventura"@es ;
+    schema:description "Deportes extremos y trekking"@es ;
+    pq:categoryIcon "🧗" ;
+    pq:categoryColor "#f56565" ;
+    dct:created "2025-11-17T00:00:00Z"^^xsd:dateTime .
+
+# ============================================================
+# LUGARES TURÍSTICOS
+# ============================================================
+
+:MonasterioSantaCatalina
+    a pq:TouristPlace, schema:LandmarksOrHistoricalBuildings ;
+    pq:databaseId 1 ;
+    schema:name "Monasterio de Santa Catalina"@es ;
+    schema:description "Ciudadela religiosa del siglo XVI, considerada una ciudad dentro de la ciudad con calles coloridas y arquitectura colonial."@es ;
+    pq:belongsToCategory :CategoriaHistorico ;
+    schema:image <https://www.peru.travel/Contenido/General/Imagen/es/564/1.1/santa-catalina.jpg> ;
+    schema:address "Calle Santa Catalina 301, Arequipa"@es ;
+    geo:lat "-16.3985"^^xsd:decimal ;
+    geo:long "-71.5369"^^xsd:decimal ;
+    schema:containedInPlace <http://dbpedia.org/resource/Arequipa> ;
+    owl:sameAs <http://dbpedia.org/resource/Santa_Catalina_Monastery> ;
+    owl:sameAs <https://www.wikidata.org/wiki/Q2074043> ;
+    dct:created "2025-11-17T00:00:00Z"^^xsd:dateTime .
+
+:CanonDelColca
+    a pq:TouristPlace, schema:NaturalFeature ;
+    pq:databaseId 2 ;
+    schema:name "Cañón del Colca"@es ;
+    schema:description "Uno de los cañones más profundos del mundo, hogar del majestuoso cóndor andino y paisajes espectaculares."@es ;
+    pq:belongsToCategory :CategoriaNaturaleza ;
+    schema:image <https://www.peru.travel/Contenido/Atractivo/Imagen/es/8/1.2/Principal/Ca%C3%B1on%20del%20Colca.jpg> ;
+    schema:address "Provincia de Caylloma, Arequipa, Perú"@es ;
+    geo:lat "-15.6001"^^xsd:decimal ;
+    geo:long "-71.8772"^^xsd:decimal ;
+    schema:containedInPlace <http://dbpedia.org/resource/Colca_Canyon> ;
+    owl:sameAs <http://dbpedia.org/resource/Colca_Canyon> ;
+    owl:sameAs <https://www.wikidata.org/wiki/Q844239> ;
+    dct:created "2025-11-17T00:00:00Z"^^xsd:dateTime .
+
+:PicanteriasTrad icionales
+    a pq:TouristPlace, schema:FoodEstablishment ;
+    pq:databaseId 9 ;
+    schema:name "Picanterías Tradicionales"@es ;
+    schema:description "Restaurantes familiares donde se sirven platos típicos como rocoto relleno, adobo y chupe de camarones."@es ;
+    pq:belongsToCategory :CategoriaGastronomia ;
+    schema:image <https://larepublica.cronosmedia.glr.pe/migration/images/KKMCLVFVQ5GOXHOTEFU56J4H44.jpg> ;
+    schema:address "Varias ubicaciones en Arequipa"@es ;
+    schema:servesCuisine "Comida Arequipeña"@es ;
+    geo:lat "-16.4090"^^xsd:decimal ;
+    geo:long "-71.5375"^^xsd:decimal ;
+    schema:containedInPlace <http://dbpedia.org/resource/Arequipa> ;
+    dct:created "2025-11-17T00:00:00Z"^^xsd:dateTime .
+
+:MuseoSantuariosAndinos
+    a pq:TouristPlace, schema:Museum ;
+    pq:databaseId 12 ;
+    schema:name "Museo Santuarios Andinos"@es ;
+    schema:description "Hogar de la momia Juanita, la doncella de hielo encontrada en el volcán Ampato."@es ;
+    pq:belongsToCategory :CategoriaCultural ;
+    schema:image <https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSrQYKRt7pE8KITR1yR-efcetaNowyhX2sB9Q&s> ;
+    schema:address "Calle La Merced 110, Centro Histórico"@es ;
+    geo:lat "-16.3985"^^xsd:decimal ;
+    geo:long "-71.5369"^^xsd:decimal ;
+    schema:containedInPlace <http://dbpedia.org/resource/Arequipa> ;
+    dct:created "2025-11-17T00:00:00Z"^^xsd:dateTime .
+
+# ============================================================
+# USUARIOS
+# ============================================================
+
+:UsuarioJuan
+    a pq:TouristUser ;
+    pq:databaseId 1 ;
+    foaf:name "Juan Pérez"@es ;
+    pq:userEmail "juan@ejemplo.com" ;
+    pq:passwordHash "$2b$10$HashedPasswordHere123456789" ;
+    pq:authenticatedWith pq:EmailPasswordAuth ;
+    dct:created "2025-11-15T10:30:00Z"^^xsd:dateTime .
+
+:UsuarioMaria
+    a pq:TouristUser ;
+    pq:databaseId 2 ;
+    foaf:name "María García"@es ;
+    pq:userEmail "maria@ejemplo.com" ;
+    pq:passwordHash "$2b$10$AnotherHashedPassword7890" ;
+    pq:authenticatedWith pq:EmailPasswordAuth ;
+    dct:created "2025-11-16T14:20:00Z"^^xsd:dateTime .
+
+:UsuarioDiego
+    a pq:TouristUser ;
+    pq:databaseId 3 ;
+    foaf:name "Diego Calancho"@es ;
+    pq:userEmail "diego@gmail.com" ;
+    pq:authenticatedWith pq:GoogleOAuth ;
+    dct:created "2025-11-17T09:00:00Z"^^xsd:dateTime .
+
+# ============================================================
+# FAVORITOS
+# ============================================================
+
+:FavoritoJuan1
+    a pq:Favorite ;
+    pq:databaseId 1 ;
+    pq:isFavoriteOf :UsuarioJuan ;
+    pq:favoritesPlace :MonasterioSantaCatalina ;
+    pq:favoritedAt "2025-11-16T15:30:00Z"^^xsd:dateTime ;
+    dct:created "2025-11-16T15:30:00Z"^^xsd:dateTime .
+
+:FavoritoJuan2
+    a pq:Favorite ;
+    pq:databaseId 2 ;
+    pq:isFavoriteOf :UsuarioJuan ;
+    pq:favoritesPlace :CanonDelColca ;
+    pq:favoritedAt "2025-11-16T15:35:00Z"^^xsd:dateTime ;
+    dct:created "2025-11-16T15:35:00Z"^^xsd:dateTime .
+
+:FavoritoMaria1
+    a pq:Favorite ;
+    pq:databaseId 3 ;
+    pq:isFavoriteOf :UsuarioMaria ;
+    pq:favoritesPlace :PicanteriasTrad icionales ;
+    pq:favoritedAt "2025-11-17T10:15:00Z"^^xsd:dateTime ;
+    dct:created "2025-11-17T10:15:00Z"^^xsd:dateTime .
+
+:FavoritoDiego1
+    a pq:Favorite ;
+    pq:databaseId 4 ;
+    pq:isFavoriteOf :UsuarioDiego ;
+    pq:favoritesPlace :MuseoSantuariosAndinos ;
+    pq:favoritedAt "2025-11-17T11:00:00Z"^^xsd:dateTime ;
+    dct:created "2025-11-17T11:00:00Z"^^xsd:dateTime .
+
+# Relacionar usuarios con favoritos
+:UsuarioJuan pq:hasFavorite :FavoritoJuan1, :FavoritoJuan2 .
+:UsuarioMaria pq:hasFavorite :FavoritoMaria1 .
+:UsuarioDiego pq:hasFavorite :FavoritoDiego1 .
+
+# Relacionar lugares con favoritos (inverso)
+:MonasterioSantaCatalina schema:interactionStatistic :FavoritoJuan1 .
+:CanonDelColca schema:interactionStatistic :FavoritoJuan2 .
+:PicanteriasTrad icionales schema:interactionStatistic :FavoritoMaria1 .
+:MuseoSantuariosAndinos schema:interactionStatistic :FavoritoDiego1 .
+
+# ============================================================
+# RESEÑAS
+# ============================================================
+
+:ResenaJuan1
+    a pq:TourismReview ;
+    pq:databaseId 1 ;
+    pq:reviewedBy :UsuarioJuan ;
+    schema:itemReviewed :MonasterioSantaCatalina ;
+    pq:reviewText "Un lugar increíble, lleno de historia y belleza arquitectónica. Las calles coloridas son perfectas para fotografías. ¡Muy recomendado!"@es ;
+    pq:reviewRating 5 ;
+    schema:reviewRating [
+        a schema:Rating ;
+        schema:ratingValue 5 ;
+        schema:bestRating 5
+    ] ;
+    schema:datePublished "2025-11-16T16:00:00Z"^^xsd:dateTime ;
+    dct:created "2025-11-16T16:00:00Z"^^xsd:dateTime .
+
+:ResenaMaria1
+    a pq:TourismReview ;
+    pq:databaseId 2 ;
+    pq:reviewedBy :UsuarioMaria ;
+    schema:itemReviewed :PicanteriasTrad icionales ;
+    pq:reviewText "La comida arequipeña en las picanterías es simplemente deliciosa. El rocoto relleno es el mejor que he probado. Ambiente familiar y auténtico."@es ;
+    pq:reviewRating 5 ;
+    schema:reviewRating [
+        a schema:Rating ;
+        schema:ratingValue 5 ;
+        schema:bestRating 5
+    ] ;
+    schema:datePublished "2025-11-17T12:00:00Z"^^xsd:dateTime ;
+    dct:created "2025-11-17T12:00:00Z"^^xsd:dateTime .
+
+:ResenaDiego1
+    a pq:TourismReview ;
+    pq:databaseId 3 ;
+    pq:reviewedBy :UsuarioDiego ;
+    schema:itemReviewed :CanonDelColca ;
+    pq:reviewText "El vuelo del cóndor es espectacular. Las vistas desde el mirador Cruz del Cóndor son impresionantes. Vale la pena madrugar para verlo."@es ;
+    pq:reviewRating 5 ;
+    schema:reviewRating [
+        a schema:Rating ;
+        schema:ratingValue 5 ;
+        schema:bestRating 5
+    ] ;
+    schema:datePublished "2025-11-17T13:30:00Z"^^xsd:dateTime ;
+    dct:created "2025-11-17T13:30:00Z"^^xsd:dateTime .
+
+# Relacionar lugares con sus reseñas
+:MonasterioSantaCatalina pq:hasReview :ResenaJuan1 .
+:PicanteriasTrad icionales pq:hasReview :ResenaMaria1 .
+:CanonDelColca pq:hasReview :ResenaDiego1 .
+
+# ============================================================
+# INTERESES DE USUARIOS
+# ============================================================
+
+:InteresJuanHistorico
+    a pq:UserInterest ;
+    pq:interestInCategory :CategoriaHistorico ;
+    dct:created "2025-11-15T10:35:00Z"^^xsd:dateTime .
+
+:InteresJuanNaturaleza
+    a pq:UserInterest ;
+    pq:interestInCategory :CategoriaNaturaleza ;
+    dct:created "2025-11-15T10:35:00Z"^^xsd:dateTime .
+
+:InteresMariaGastronomia
+    a pq:UserInterest ;
+    pq:interestInCategory :CategoriaGastronomia ;
+    dct:created "2025-11-16T14:25:00Z"^^xsd:dateTime .
+
+:InteresMariaCultural
+    a pq:UserInterest ;
+    pq:interestInCategory :CategoriaCultural ;
+    dct:created "2025-11-16T14:25:00Z"^^xsd:dateTime .
+
+# Relacionar usuarios con sus intereses
+:UsuarioJuan pq:hasInterest :InteresJuanHistorico, :InteresJuanNaturaleza .
+:UsuarioMaria pq:hasInterest :InteresMariaGastronomia, :InteresMariaCultural .
+
+# ============================================================
+# SESIONES DE USUARIO
+# ============================================================
+
+:SesionJuan1
+    a pq:UserSession ;
+    prov:wasAssociatedWith :UsuarioJuan ;
+    pq:sessionToken "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." ;
+    pq:rememberSession true ;
+    prov:startedAtTime "2025-11-17T08:00:00Z"^^xsd:dateTime ;
+    prov:endedAtTime "2025-11-17T18:00:00Z"^^xsd:dateTime .
+
+:SesionMaria1
+    a pq:UserSession ;
+    prov:wasAssociatedWith :UsuarioMaria ;
+    pq:sessionToken "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ8..." ;
+    pq:rememberSession false ;
+    prov:startedAtTime "2025-11-17T10:00:00Z"^^xsd:dateTime .
+
+# ============================================================
+# ENLACES A DATOS EXTERNOS (Linked Open Data)
+# ============================================================
+
+# Ciudad de Arequipa
+<http://dbpedia.org/resource/Arequipa>
+    a schema:City ;
+    schema:name "Arequipa"@es ;
+    geo:lat "-16.409047"^^xsd:decimal ;
+    geo:long "-71.537451"^^xsd:decimal ;
+    owl:sameAs <https://www.wikidata.org/wiki/Q2 2888> ;
+    owl:sameAs <http://sws.geonames.org/3947322/> .
+
+# ============================================================
+# FIN DE DATOS DE EJEMPLO
+# ============================================================

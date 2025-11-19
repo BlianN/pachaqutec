@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+    xmlns:schema="http://schema.org/"
+    xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#"
+    xmlns:dct="http://purl.org/dc/terms/"
+    xmlns:foaf="http://xmlns.com/foaf/0.1/"
+    xmlns:prov="http://www.w3.org/ns/prov#"
+    xmlns:sioc="http://rdfs.org/sioc/ns#"
+    xmlns:pq="https://pachaqutec.app/ontology#"
+    xml:base="https://pachaqutec.app/ontology">
+
+<!-- ============================================================ -->
+<!-- ONTOLOGÍA PACHAQUTEC - WEB SEMÁNTICA                        -->
+<!-- ============================================================ -->
+
+<owl:Ontology rdf:about="https://pachaqutec.app/ontology">
+    <owl:versionIRI rdf:resource="https://pachaqutec.app/ontology/1.0.0"/>
+    <owl:versionInfo>1.0.0</owl:versionInfo>
+    <dct:title xml:lang="es">PachaQutec Tourism Ontology</dct:title>
+    <dct:title xml:lang="en">PachaQutec Tourism Ontology</dct:title>
+    <dct:description xml:lang="es">Ontología para modelar datos turísticos semánticos de Arequipa</dct:description>
+    <dct:description xml:lang="en">Ontology for modeling semantic tourism data from Arequipa</dct:description>
+    <dct:created rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2025-11-17</dct:created>
+    <dct:creator rdf:resource="https://pachaqutec.app/team#EquipoDesarrollo"/>
+    <dct:license rdf:resource="https://creativecommons.org/licenses/by/4.0/"/>
+    <rdfs:comment xml:lang="es">Esta ontología extiende Schema.org para casos específicos de turismo personalizado</rdfs:comment>
+    <owl:imports rdf:resource="http://schema.org/"/>
+    <owl:imports rdf:resource="http://www.w3.org/2003/01/geo/wgs84_pos#"/>
+    <owl:imports rdf:resource="http://purl.org/dc/terms/"/>
+    <owl:imports rdf:resource="http://xmlns.com/foaf/0.1/"/>
+</owl:Ontology>
+
+<!-- ============================================================ -->
+<!-- CLASES PRINCIPALES                                          -->
+<!-- ============================================================ -->
+
+<!-- Categoría Turística -->
+<owl:Class rdf:about="https://pachaqutec.app/ontology#TourismCategory">
+    <rdfs:subClassOf rdf:resource="http://schema.org/Intangible"/>
+    <rdfs:label xml:lang="es">Categoría Turística</rdfs:label>
+    <rdfs:label xml:lang="en">Tourism Category</rdfs:label>
+    <rdfs:comment xml:lang="es">Categorización de lugares turísticos (Histórico, Naturaleza, Gastronomía, etc.)</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="https://pachaqutec.app/ontology"/>
+</owl:Class>
+
+<!-- Lugar Turístico -->
+<owl:Class rdf:about="https://pachaqutec.app/ontology#TouristPlace">
+    <rdfs:subClassOf rdf:resource="http://schema.org/TouristAttraction"/>
+    <rdfs:subClassOf rdf:resource="http://schema.org/Place"/>
+    <rdfs:label xml:lang="es">Lugar Turístico</rdfs:label>
+    <rdfs:label xml:lang="en">Tourist Place</rdfs:label>
+    <rdfs:comment xml:lang="es">Lugar de interés turístico en Arequipa</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="https://pachaqutec.app/ontology"/>
+</owl:Class>
+
+<!-- Usuario Turista -->
+<owl:Class rdf:about="https://pachaqutec.app/ontology#TouristUser">
+    <rdfs:subClassOf rdf:resource="http://schema.org/Person"/>
+    <rdfs:subClassOf rdf:resource="http://xmlns.com/foaf/0.1/Person"/>
+    <rdfs:label xml:lang="es">Usuario Turista</rdfs:label>
+    <rdfs:label xml:lang="en">Tourist User</rdfs:label>
+    <rdfs:comment xml:lang="es">Usuario registrado en la plataforma PachaQutec</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="https://pachaqutec.app/ontology"/>
+</owl:Class>
+
+<!-- Favorito -->
+<owl:Class rdf:about="https://pachaqutec.app/ontology#Favorite">
+    <rdfs:subClassOf rdf:resource="http://schema.org/InteractionCounter"/>
+    <rdfs:label xml:lang="es">Favorito</rdfs:label>
+    <rdfs:label xml:lang="en">Favorite</rdfs:label>
+    <rdfs:comment xml:lang="es">Relación entre un usuario y un lugar marcado como favorito</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="https://pachaqutec.app/ontology"/>
+    <!-- Restricción: debe tener exactamente un usuario -->
+    <rdfs:subClassOf>
+        <owl:Restriction>
+            <owl:onProperty rdf:resource="https://pachaqutec.app/ontology#isFavoriteOf"/>
+            <owl:qualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#nonNegativeInteger">1</owl:qualifiedCardinality>
+            <owl:onClass rdf:resource="https://pachaqutec.app/ontology#TouristUser"/>
+        </owl:Restriction>
+    </rdfs:subClassOf>
+    <!-- Restricción: debe tener exactamente un lugar -->
+    <rdfs:subClassOf>
+        <owl:Restriction>
+            <owl:onProperty rdf:resource="https://pachaqutec.app/ontology#favoritesPlace"/>
+            <owl:qualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#nonNegativeInteger">1</owl:qualifiedCardinality>
+            <owl:onClass rdf:resource="https://pachaqutec.app/ontology#TouristPlace"/>
+        </owl:Restriction>
+    </rdfs:subClassOf>
+</owl:Class>
+
+<!-- Reseña Turística -->
+<owl:Class rdf:about="https://pachaqutec.app/ontology#TourismReview">
+    <rdfs:subClassOf rdf:resource="http://schema.org/Review"/>
+    <rdfs:subClassOf rdf:resource="http://rdfs.org/sioc/ns#Post"/>
+    <rdfs:label xml:lang="es">Reseña Turística</rdfs:label>
+    <rdfs:label xml:lang="en">Tourism Review</rdfs:label>
+    <rdfs:comment xml:lang="es">Reseña escrita por un usuario sobre un lugar turístico</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="https://pachaqutec.app/ontology"/>
+</owl:Class>
+
+<!-- Sesión de Usuario -->
+<owl:Class rdf:about="https://pachaqutec.app/ontology#UserSession">
+    <rdfs:subClassOf rdf:resource="http://www.w3.org/ns/prov#Activity"/>
+    <rdfs:label xml:lang="es">Sesión de Usuario</rdfs:label>
+    <rdfs:label xml:lang="en">User Session</rdfs:label>
+    <rdfs:comment xml:lang="es">Sesión activa de un usuario en la plataforma</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="https://pachaqutec.app/ontology"/>
+</owl:Class>
+
+<!-- Interés de Usuario -->
+<owl:Class rdf:about="https://pachaqutec.app/ontology#UserInterest">
+    <rdfs:subClassOf rdf:resource="http://schema.org/Thing"/>
+    <rdfs:label xml:lang="es">Interés de Usuario</rdfs:label>
+    <rdfs:label xml:lang="en">User Interest</rdfs:label>
+    <rdfs:comment xml:lang="es">Preferencias turísticas seleccionadas por el usuario</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="https://pachaqutec.app/ontology"/>
+</owl:Class>
+
+<!-- Método de Autenticación -->
+<owl:Class rdf:about="https://pachaqutec.app/ontology#AuthenticationMethod">
+    <rdfs:label xml:lang="es">Método de Autenticación</rdfs:label>
+    <rdfs:label xml:lang="en">Authentication Method</rdfs:label>
+    <rdfs:comment xml:lang="es">Método usado para autenticar al usuario</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="https://pachaqutec.app/ontology"/>
+</owl:Class>
+
+<!-- ============================================================ -->
+<!-- PROPIEDADES DE OBJETO (Object Properties)                   -->
+<!-- ============================================================ -->
+
+<!-- belongsToCategory -->
+<owl:ObjectProperty rdf:about="https://pachaqutec.app/ontology#belongsToCategory">
+    <rdfs:domain rdf:resource="https://pachaqutec.app/ontology#TouristPlace"/>
+    <rdfs:range rdf:resource="https://pachaqutec.app/ontology#TourismCategory"/>
+    <rdfs:label xml:lang="es">pertenece a categoría</rdfs:label>
+    <rdfs:label xml:lang="en">belongs to category</rdfs:label>
+    <rdfs:comment xml:lang="es">Indica la categoría a la que pertenece un lugar turístico</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="https://pachaqutec.app/ontology"/>
+</owl:ObjectProperty>
+
+<!-- hasFavorite -->
+<owl:ObjectProperty rdf:about="https://pachaqutec.app/ontology#hasFavorite">
+    <rdfs:domain rdf:resource="https://pachaqutec.app/ontology#TouristUser"/>
+    <rdfs:range rdf:resource="https://pachaqutec.app/ontology#Favorite"/>
+    <rdfs:label xml:lang="es">tiene favorito</rdfs:label>
+    <rdfs:label xml:lang="en">has favorite</rdfs:label>
+    <rdfs:comment xml:lang="es">Relaciona un usuario con sus lugares favoritos</rdfs:comment>
+    <owl:inverseOf rdf:resource="https://pachaqutec.app/ontology#isFavoriteOf"/>
+    <rdfs:isDefinedBy rdf:resource="https://pachaqutec.app/ontology"/>
+</owl:ObjectProperty>
+
+<!-- isFavoriteOf -->
+<owl:ObjectProperty rdf:about="https://pachaqutec.app/ontology#isFavoriteOf">
+    <rdfs:domain rdf:resource="https://pachaqutec.app/ontology#Favorite"/>
+    <rdfs:range rdf:resource="https://pachaqutec.app/ontology#TouristUser"/>
+    <rdfs:label xml:lang="es">es favorito de</rdfs:label>
+    <rdfs:label xml:lang="en">is favorite of</rdfs:label>
+    <rdfs:comment xml:lang="es">Indica el usuario que marcó un lugar como favorito</rdfs:comment>
+    <owl:inverseOf rdf:resource="https://pachaqutec.app/ontology#hasFavorite"/>
+    <rdfs:isDefinedBy rdf:resource="https://pachaqutec.app/ontology"/>
+</owl:ObjectProperty>
+
+<!-- favoritesPlace -->
+<owl:ObjectProperty rdf:about="https://pachaqutec.app/ontology#favoritesPlace">
+    <rdfs:domain rdf:resource="https://pachaqutec.app/ontology#Favorite"/>
+    <rdfs:range rdf:resource="https://pachaqutec.app/ontology#TouristPlace"/>
+    <rdfs:label xml:lang="es">marca como favorito el lugar</rdfs:label>
+    <rdfs:label xml:lang="en">favorites place</rdfs:label>
+    <rdfs:comment xml:lang="es">Indica el lugar turístico marcado como favorito</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="https://pachaqutec.app/ontology"/>
+</owl:ObjectProperty>
+
+<!-- hasReview -->
+<owl:ObjectProperty rdf:about="https://pachaqutec.app/ontology#hasReview">
+    <rdfs:domain rdf:resource="https://pachaqutec.app/ontology#TouristPlace"/>
+    <rdfs:range rdf:resource="https://pachaqutec.app/ontology#TourismReview"/>
+    <rdfs:label xml:lang="es">tiene reseña</rdfs:label>
+    <rdfs:label xml:lang="en">has review</rdfs:label>
+    <rdfs:comment xml:lang="es">Indica las reseñas asociadas a un lugar turístico</rdfs:comment>
+    <rdfs:subPropertyOf rdf:resource="http://schema.org/review"/>
+    <rdfs:isDefinedBy rdf:resource="https://pachaqutec.app/ontology"/>
+</owl:ObjectProperty>
+
+<!-- reviewedBy -->
+<owl:ObjectProperty rdf:about="https://pachaqutec.app/ontology#reviewedBy">
+    <rdfs:domain rdf:resource="https://pachaqutec.app/ontology#TourismReview"/>
+    <rdfs:range rdf:resource="https://pachaqutec.app/ontology#TouristUser"/>
+    <rdfs:label xml:lang="es">reseñado por</rdfs:label>
+    <rdfs:label xml:lang="en">reviewed by</rdfs:label>
+    <rdfs:comment xml:lang="es">Indica el usuario que escribió la reseña</rdfs:comment>
+    <rdfs:subPropertyOf rdf:resource="http://schema.org/author"/>
+    <rdfs:isDefinedBy rdf:resource="https://pachaqutec.app/ontology"/>
+</owl:ObjectProperty>
+
+<!-- hasInterest -->
+<owl:ObjectProperty rdf:about="https://pachaqutec.app/ontology#hasInterest">
+    <rdfs:domain rdf:resource="https://pachaqutec.app/ontology#TouristUser"/>
+    <rdfs:range rdf:resource="https://pachaqutec.app/ontology#UserInterest"/>
+    <rdfs:label xml:lang="es">tiene interés</rdfs:label>
+    <rdfs:label xml:lang="en">has interest</rdfs:label>
+    <rdfs:comment xml:lang="es">Relaciona un usuario con sus intereses turísticos</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="https://pachaqutec.app/ontology"/>
+</owl:ObjectProperty>
+
+<!-- interestInCategory -->
+<owl:ObjectProperty rdf:about="https://pachaqutec.app/ontology#interestInCategory">
+    <rdfs:domain rdf:resource="https://pachaqutec.app/ontology#UserInterest"/>
+    <rdfs:range rdf:resource="https://pachaqutec.app/ontology#TourismCategory"/>
+    <rdfs:label xml:lang="es">interés en categoría</rdfs:label>
+    <rdfs:label xml:lang="en">interest in category</rdfs:label>
+    <rdfs:comment xml:lang="es">Indica la categoría de interés del usuario</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="https://pachaqutec.app/ontology"/>
+</owl:ObjectProperty>
+
+<!-- authenticatedWith -->
+<owl:ObjectProperty rdf:about="https://pachaqutec.app/ontology#authenticatedWith">
+    <rdfs:domain rdf:resource="https://pachaqutec.app/ontology#TouristUser"/>
+    <rdfs:range rdf:resource="https://pachaqutec.app/ontology#AuthenticationMethod"/>
+    <rdfs:label xml:lang="es">autenticado con</rdfs:label>
+    <rdfs:label xml:lang="en">authenticated with</rdfs:label>
+    <rdfs:comment xml:lang="es">Método de autenticación usado por el usuario</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="https://pachaqutec.app/ontology"/>
+</owl:ObjectProperty>
+
+<!-- ============================================================ -->
+<!-- PROPIEDADES DE DATOS (Datatype Properties)                  -->
+<!-- ============================================================ -->
+
+<!-- categoryIcon -->
+<owl:DatatypeProperty rdf:about="https://pachaqutec.app/ontology#categoryIcon">
+    <rdfs:domain rdf:resource="https://pachaqutec.app/ontology#TourismCategory"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+    <rdfs:label xml:lang="es">ícono de categoría</rdfs:label>
+    <rdfs:label xml:lang="en">category icon</rdfs:label>
+    <rdfs:comment xml:lang="es">Emoji o ícono representativo de la categoría</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="https://pachaqutec.app/ontology"/>
+</owl:DatatypeProperty>
+
+<!-- categoryColor -->
+<owl:DatatypeProperty rdf:about="https://pachaqutec.app/ontology#categoryColor">
+    <rdfs:domain rdf:resource="https://pachaqutec.app/ontology#TourismCategory"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+    <rdfs:label xml:lang="es">color de categoría</rdfs:label>
+    <rdfs:label xml:lang="en">category color</rdfs:label>
+    <rdfs:comment xml:lang="es">Color hexadecimal asociado a la categoría</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="https://pachaqutec.app/ontology"/>
+</owl:DatatypeProperty>
+
+<!-- favoritedAt -->
+<owl:DatatypeProperty rdf:about="https://pachaqutec.app/ontology#favoritedAt">
+    <rdfs:domain rdf:resource="https://pachaqutec.app/ontology#Favorite"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#dateTime"/>
+    <rdfs:label xml:lang="es">marcado como favorito en</rdfs:label>
+    <rdfs:label xml:lang="en">favorited at</rdfs:label>
+    <rdfs:comment xml:lang="es">Fecha y hora en que se marcó como favorito</rdfs:comment>
+    <rdfs:subPropertyOf rdf:resource="http://purl.org/dc/terms/created"/>
+    <rdfs:isDefinedBy rdf:resource="https://pachaqutec.app/ontology"/>
+</owl:DatatypeProperty>
+
+<!-- reviewRating -->
+<owl:DatatypeProperty rdf:about="https://pachaqutec.app/ontology#reviewRating">
+    <rdfs:domain rdf:resource="https://pachaqutec.app/ontology#TourismReview"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+    <rdfs:label xml:lang="es">calificación de reseña</rdfs:label>
+    <rdfs:label xml:lang="en">review rating</rdfs:label>
+    <rdfs:comment xml:lang="es">Calificación numérica de 1 a 5 estrellas</rdfs:comment>
+    <rdfs:subPropertyOf rdf:resource="http://schema.org/ratingValue"/>
+    <rdfs:isDefinedBy rdf:resource="https://pachaqutec.app/ontology"/>
+</owl:DatatypeProperty>
+
+<!-- reviewText -->
+<owl:DatatypeProperty rdf:about="https://pachaqutec.app/ontology#reviewText">
+    <rdfs:domain rdf:resource="https://pachaqutec.app/ontology#TourismReview"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+    <rdfs:label xml:lang="es">texto de reseña</rdfs:label>
+    <rdfs:label xml:lang="en">review text</rdfs:label>
+    <rdfs:comment xml:lang="es">Contenido textual de la reseña</rdfs:comment>
+    <rdfs:subPropertyOf rdf:resource="http://schema.org/reviewBody"/>
+    <rdfs:isDefinedBy rdf:resource="https://pachaqutec.app/ontology"/>
+</owl:DatatypeProperty>
+
+<!-- userEmail -->
+<owl:DatatypeProperty rdf:about="https://pachaqutec.app/ontology#userEmail">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
+    <rdfs:domain rdf:resource="https://pachaqutec.app/ontology#TouristUser"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+    <rdfs:label xml:lang="es">correo electrónico</rdfs:label>
+    <rdfs:label xml:lang="en">email</rdfs:label>
+    <rdfs:comment xml:lang="es">Correo electrónico del usuario (único)</rdfs:comment>
+    <rdfs:subPropertyOf rdf:resource="http://xmlns.com/foaf/0.1/mbox"/>
+    <rdfs:isDefinedBy rdf:resource="https://pachaqutec.app/ontology"/>
+</owl:DatatypeProperty>
+
+<!-- passwordHash -->
+<owl:DatatypeProperty rdf:about="https://pachaqutec.app/ontology#passwordHash">
+    <rdfs:domain rdf:resource="https://pachaqutec.app/ontology#TouristUser"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+    <rdfs:label xml:lang="es">hash de contraseña</rdfs:label>
+    <rdfs:label xml:lang="en">password hash</rdfs:label>
+    <rdfs:comment xml:lang="es">Hash encriptado de la contraseña del usuario</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="https://pachaqutec.app/ontology"/>
+</owl:DatatypeProperty>
+
+<!-- sessionToken -->
+<owl:DatatypeProperty rdf:about="https://pachaqutec.app/ontology#sessionToken">
+    <rdfs:domain rdf:resource="https://pachaqutec.app/ontology#UserSession"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+    <rdfs:label xml:lang="es">token de sesión</rdfs:label>
+    <rdfs:label xml:lang="en">session token</rdfs:label>
+    <rdfs:comment xml:lang="es">Token único de autenticación de sesión</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="https://pachaqutec.app/ontology"/>
+</owl:DatatypeProperty>
+
+<!-- rememberSession -->
+<owl:DatatypeProperty rdf:about="https://pachaqutec.app/ontology#rememberSession">
+    <rdfs:domain rdf:resource="https://pachaqutec.app/ontology#UserSession"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+    <rdfs:label xml:lang="es">recordar sesión</rdfs:label>
+    <rdfs:label xml:lang="en">remember session</rdfs:label>
+    <rdfs:comment xml:lang="es">Indica si el usuario optó por recordar la sesión</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="https://pachaqutec.app/ontology"/>
+</owl:DatatypeProperty>
+
+<!-- databaseId -->
+<owl:DatatypeProperty rdf:about="https://pachaqutec.app/ontology#databaseId">
+    <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
+    <rdfs:domain rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
+    <rdfs:label xml:lang="es">ID de base de datos</rdfs:label>
+    <rdfs:label xml:lang="en">database ID</rdfs:label>
+    <rdfs:comment xml:lang="es">Identificador numérico único en PostgreSQL</rdfs:comment>
+    <rdfs:isDefinedBy rdf:resource="https://pachaqutec.app/ontology"/>
+</owl:DatatypeProperty>
+
+<!-- ============================================================ -->
+<!-- INSTANCIAS DE MÉTODOS DE AUTENTICACIÓN                      -->
+<!-- ============================================================ -->
+
+<pq:AuthenticationMethod rdf:about="https://pachaqutec.app/ontology#EmailPasswordAuth">
+    <rdfs:label xml:lang="es">Email/Password</rdfs:label>
+    <rdfs:comment xml:lang="es">Autenticación tradicional con correo y contraseña</rdfs:comment>
+</pq:AuthenticationMethod>
+
+<pq:AuthenticationMethod rdf:about="https://pachaqutec.app/ontology#GoogleOAuth">
+    <rdfs:label xml:lang="es">Google OAuth</rdfs:label>
+    <rdfs:comment xml:lang="es">Autenticación mediante cuenta de Google</rdfs:comment>
+</pq:AuthenticationMethod>
+
+<pq:AuthenticationMethod rdf:about="https://pachaqutec.app/ontology#FacebookOAuth">
+    <rdfs:label xml:lang="es">Facebook OAuth</rdfs:label>
+    <rdfs:comment xml:lang="es">Autenticación mediante cuenta de Facebook</rdfs:comment>
+</pq:AuthenticationMethod>
+
+<!-- ============================================================ -->
+<!-- INFORMACIÓN DEL EQUIPO                                      -->
+<!-- ============================================================ -->
+
+<foaf:Group rdf:about="https://pachaqutec.app/team#EquipoDesarrollo">
+    <rdf:type rdf:resource="http://schema.org/Organization"/>
+    <foaf:name>Equipo PachaQutec - UCSP</foaf:name>
+    <schema:member rdf:resource="https://pachaqutec.app/team#Diego"/>
+    <schema:member rdf:resource="https://pachaqutec.app/team#Miguel"/>
+    <schema:member rdf:resource="https://pachaqutec.app/team#Rodrigo"/>
+</foaf:Group>
+
+<foaf:Person rdf:about="https://pachaqutec.app/team#Diego">
+    <foaf:name>Diego Miguel Calancho Llerena</foaf:name>
+    <schema:roleName>Desarrollador Frontend</schema:roleName>
+</foaf:Person>
+
+<foaf:Person rdf:about="https://pachaqutec.app/team#Miguel">
+    <foaf:name>Miguel Pol Escobar Aguilar</foaf:name>
+    <schema:roleName>Desarrollador Backend</schema:roleName>
+</foaf:Person>
+
+<foaf:Person rdf:about="https://pachaqutec.app/team#Rodrigo">
+    <foaf:name>Rodrigo Fredy Sulla Gonzales</foaf:name>
+    <schema:roleName>Diseñador UI/UX</schema:roleName>
+</foaf:Person>
+
+</rdf:RDF>
