@@ -55,7 +55,7 @@ services:
         - REACT_APP_FIREBASE_APP_ID=${FIREBASE_APP_ID}
     container_name: pachaqutec-frontend
     ports:
-      - "80:80"
+      - "8080:80"
     depends_on:
       - backend
     networks:
