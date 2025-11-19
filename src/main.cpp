@@ -1,51 +1,44 @@
 #include <drogon/drogon.h>
-#include <fstream>
-#include <sstream>
-#include <cstdlib>
-#include <string>
+#include <drogon/HttpAppFramework.h>
+#include <drogon/orm/DbClient.h>
 #include "RDFGenerator.hpp"
 
 using namespace drogon;
 using namespace drogon::orm;
 
 int main() {
-    // Obtener variables de entorno
-    std::string dbHost = std::getenv("DB_HOST") ? std::getenv("DB_HOST") : "localhost";
-    std::string dbPort = std::getenv("DB_PORT") ? std::getenv("DB_PORT") : "5432";
-    std::string dbName = std::getenv("DB_NAME") ? std::getenv("DB_NAME") : "mi_base_datos";
-    std::string dbUser = std::getenv("DB_USER") ? std::getenv("DB_USER") : "miusuario";
-    std::string dbPassword = std::getenv("DB_PASSWORD") ? std::getenv("DB_PASSWORD") : "mipassword";
-
     std::cout << "Conectando a PostgreSQL:" << std::endl;
-    std::cout << "  Host: " << dbHost << std::endl;
-    std::cout << "  Port: " << dbPort << std::endl;
-    std::cout << "  Database: " << dbName << std::endl;
-    std::cout << "  User: " << dbUser << std::endl;
+    std::cout << "  Host: " << std::getenv("DB_HOST") << std::endl;
+    std::cout << "  Port: " << std::getenv("DB_PORT") << std::endl;
+    std::cout << "  Database: " << std::getenv("DB_NAME") << std::endl;
+    std::cout << "  User: " << std::getenv("DB_USER") << std::endl;
 
-    // CONFIGURACIÓN MODERNA DE DROGON - PostgresConfig con asignación directa
-    drogon::orm::PostgresConfig pgConfig;
-    pgConfig.host = dbHost;
-    pgConfig.port = std::stoi(dbPort);
-    pgConfig.databaseName = dbName;
-    pgConfig.username = dbUser;      
-    pgConfig.password = dbPassword;
-    pgConfig.connectionNumber = 1;
-    pgConfig.timeout = 10.0;
-    pgConfig.isFast = false;
-    pgConfig.characterSet = "utf8";
-    pgConfig.name = "default";
+    // Configuración de conexión a PostgreSQL
+    Json::Value dbConfig;
+    dbConfig["rdbms"] = "postgresql";
+    dbConfig["host"] = std::getenv("DB_HOST") ? std::getenv("DB_HOST") : "postgres";
+    dbConfig["port"] = std::stoi(std::getenv("DB_PORT") ? std::getenv("DB_PORT") : "5432");
+    dbConfig["dbname"] = std::getenv("DB_NAME") ? std::getenv("DB_NAME") : "mi_base_datos";
+    dbConfig["user"] = std::getenv("DB_USER") ? std::getenv("DB_USER") : "miusuario";
+    dbConfig["password"] = std::getenv("DB_PASSWORD") ? std::getenv("DB_PASSWORD") : "mipassword";
+    dbConfig["client_encoding"] = "utf8";
+    dbConfig["is_fast"] = true;
+    dbConfig["number_of_connections"] = 5;
 
-    // Configurar Drogon
+    // Crear cliente de base de datos
+    auto clientPtr = DbClient::newPgClient(dbConfig);
+
+    // Configurar aplicación
     app()
+        .setLogPath("./")
+        .setLogLevel(trantor::Logger::kInfo)
         .addListener("0.0.0.0", 8080)
         .setThreadNum(4)
-        // Habilitar CORS para el frontend
+        // CORS
         .registerPostHandlingAdvice(
             [](const HttpRequestPtr &req, const HttpResponsePtr &resp) {
-                // Obtener el origin de la petición
                 auto origin = req->getHeader("Origin");
                 
-                // Permitir estos dominios
                 if (origin == "https://pachaqutec.com" || 
                     origin == "https://www.pachaqutec.com") {
                     resp->addHeader("Access-Control-Allow-Origin", origin);
@@ -54,209 +47,146 @@ int main() {
                 resp->addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
                 resp->addHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
                 resp->addHeader("Access-Control-Allow-Credentials", "true");
-            })
-        // Configurar el cliente de base de datos con PostgresConfig
-        .addDbClient(pgConfig)
-        
-        // Ruta de prueba - página principal
-        .registerHandler("/",
-            [](const HttpRequestPtr& req,
-               std::function<void(const HttpResponsePtr&)>&& callback) {
-                auto resp = HttpResponse::newHttpResponse();
-                resp->setBody("¡Backend con Drogon y PostgreSQL funcionando! "
-                            "Prueba: GET /usuarios para ver los datos.");
-                callback(resp);
-            })
-        
-        // Ruta para obtener usuarios de la base de datos
-        .registerHandler("/usuarios",
-            [](const HttpRequestPtr& req,
-               std::function<void(const HttpResponsePtr&)>&& callback) {
-                
-                auto clientPtr = app().getDbClient("default");
-                
-                clientPtr->execSqlAsync(
-                    "SELECT id, nombre, email, created_at FROM usuarios",
-                    [callback](const drogon::orm::Result &r) {
-                        Json::Value jsonResponse;
-                        jsonResponse["success"] = true;
-                        jsonResponse["count"] = (int)r.size();
-                        
-                        for (size_t i = 0; i < r.size(); ++i) {
-                            Json::Value usuario;
-                            usuario["id"] = r[i]["id"].as<int>();
-                            usuario["nombre"] = r[i]["nombre"].as<std::string>();
-                            usuario["email"] = r[i]["email"].as<std::string>();
-                            usuario["created_at"] = r[i]["created_at"].as<std::string>();
-                            jsonResponse["usuarios"].append(usuario);
-                        }
-                        
-                        auto resp = HttpResponse::newHttpJsonResponse(jsonResponse);
-                        callback(resp);
-                    },
-                    [callback](const drogon::orm::DrogonDbException &e) {
-                        Json::Value jsonError;
-                        jsonError["success"] = false;
-                        jsonError["error"] = e.base().what();
-                        
-                        auto resp = HttpResponse::newHttpJsonResponse(jsonError);
-                        resp->setStatusCode(k500InternalServerError);
-                        callback(resp);
-                    }
-                );
-            })
+            });
 
-        // Ruta para LOGIN
-        .registerHandler("/login",
-            [](const HttpRequestPtr& req,
-               std::function<void(const HttpResponsePtr&)>&& callback) {
-                
-                // Solo acepta POST
-                if (req->method() != Post) {
-                    auto resp = HttpResponse::newHttpResponse();
-                    resp->setStatusCode(k405MethodNotAllowed);
+    // Manejar OPTIONS para CORS preflight
+    app().registerPreRoutingAdvice(
+        [](const HttpRequestPtr &req) {
+            if (req->method() == Options) {
+                auto resp = HttpResponse::newHttpResponse();
+                resp->setStatusCode(k200OK);
+                return resp;
+            }
+            return HttpResponsePtr{};
+        });
+
+    // Obtener todos los usuarios
+    app().registerHandler("/usuarios",
+        [clientPtr](const HttpRequestPtr &req,
+                   std::function<void(const HttpResponsePtr &)> &&callback) {
+            clientPtr->execSqlAsync(
+                "SELECT id, nombre, email, created_at FROM usuarios ORDER BY id",
+                [callback](const Result &r) {
+                    Json::Value response;
+                    Json::Value usuarios(Json::arrayValue);
+                    
+                    for (size_t i = 0; i < r.size(); ++i) {
+                        Json::Value usuario;
+                        usuario["id"] = r[i]["id"].as<int>();
+                        usuario["nombre"] = r[i]["nombre"].as<std::string>();
+                        usuario["email"] = r[i]["email"].as<std::string>();
+                        usuario["created_at"] = r[i]["created_at"].as<std::string>();
+                        usuarios.append(usuario);
+                    }
+                    
+                    response["success"] = true;
+                    response["count"] = static_cast<int>(r.size());
+                    response["usuarios"] = usuarios;
+                    
+                    auto resp = HttpResponse::newHttpJsonResponse(response);
                     callback(resp);
-                    return;
-                }
-                
-                auto clientPtr = app().getDbClient("default");
-                auto jsonPtr = req->getJsonObject();
-                
-                if (!jsonPtr) {
-                    Json::Value jsonError;
-                    jsonError["success"] = false;
-                    jsonError["error"] = "JSON inválido";
-                    auto resp = HttpResponse::newHttpJsonResponse(jsonError);
-                    resp->setStatusCode(k400BadRequest);
+                },
+                [callback](const DrogonDbException &e) {
+                    Json::Value error;
+                    error["success"] = false;
+                    error["message"] = "Error al obtener usuarios: " + std::string(e.base().what());
+                    auto resp = HttpResponse::newHttpJsonResponse(error);
+                    resp->setStatusCode(k500InternalServerError);
                     callback(resp);
-                    return;
-                }
-                
-                std::string email = (*jsonPtr)["email"].asString();
-                std::string password = (*jsonPtr)["password"].asString();
-                
-                if (email.empty() || password.empty()) {
-                    Json::Value jsonError;
-                    jsonError["success"] = false;
-                    jsonError["error"] = "Email y contraseña son requeridos";
-                    auto resp = HttpResponse::newHttpJsonResponse(jsonError);
-                    resp->setStatusCode(k400BadRequest);
-                    callback(resp);
-                    return;
-                }
-                
-                clientPtr->execSqlAsync(
-                    "SELECT id, nombre, email FROM usuarios WHERE email = $1 AND password = $2",
-                    [callback](const drogon::orm::Result &r) {
-                        if (r.size() == 0) {
-                            // Credenciales incorrectas
-                            Json::Value jsonError;
-                            jsonError["success"] = false;
-                            jsonError["error"] = "Email o contraseña incorrectos";
-                            auto resp = HttpResponse::newHttpJsonResponse(jsonError);
-                            resp->setStatusCode(k401Unauthorized);
-                            callback(resp);
-                        } else {
-                            // Login exitoso
-                            Json::Value jsonResponse;
-                            jsonResponse["success"] = true;
-                            jsonResponse["usuario"]["id"] = r[0]["id"].as<int>();
-                            jsonResponse["usuario"]["nombre"] = r[0]["nombre"].as<std::string>();
-                            jsonResponse["usuario"]["email"] = r[0]["email"].as<std::string>();
-                            
-                            auto resp = HttpResponse::newHttpJsonResponse(jsonResponse);
-                            callback(resp);
-                        }
-                    },
-                    [callback](const drogon::orm::DrogonDbException &e) {
-                        Json::Value jsonError;
-                        jsonError["success"] = false;
-                        jsonError["error"] = e.base().what();
-                        auto resp = HttpResponse::newHttpJsonResponse(jsonError);
-                        resp->setStatusCode(k500InternalServerError);
-                        callback(resp);
-                    },
-                    email,
-                    password
-                );
-            })
-        // Ruta para REGISTRO
-        .registerHandler("/registro",
-            [](const HttpRequestPtr& req,
-               std::function<void(const HttpResponsePtr&)>&& callback) {
-                
-                // Solo acepta POST
-                if (req->method() != Post) {
-                    auto resp = HttpResponse::newHttpResponse();
-                    resp->setStatusCode(k405MethodNotAllowed);
-                    callback(resp);
-                    return;
-                }
-                
-                auto clientPtr = app().getDbClient("default");
-                auto jsonPtr = req->getJsonObject();
-                
-                if (!jsonPtr) {
-                    Json::Value jsonError;
-                    jsonError["success"] = false;
-                    jsonError["error"] = "JSON inválido";
-                    auto resp = HttpResponse::newHttpJsonResponse(jsonError);
-                    resp->setStatusCode(k400BadRequest);
-                    callback(resp);
-                    return;
-                }
-                
-                std::string nombre = (*jsonPtr)["nombre"].asString();
-                std::string email = (*jsonPtr)["email"].asString();
-                std::string password = (*jsonPtr)["password"].asString();
-                
-                if (nombre.empty() || email.empty() || password.empty()) {
-                    Json::Value jsonError;
-                    jsonError["success"] = false;
-                    jsonError["error"] = "Nombre, email y contraseña son requeridos";
-                    auto resp = HttpResponse::newHttpJsonResponse(jsonError);
-                    resp->setStatusCode(k400BadRequest);
-                    callback(resp);
-                    return;
-                }
-                
-                clientPtr->execSqlAsync(
-                    "INSERT INTO usuarios (nombre, email, password) VALUES ($1, $2, $3) RETURNING id, nombre, email, created_at",
-                    [callback](const drogon::orm::Result &r) {
-                        // Registro exitoso
-                        Json::Value jsonResponse;
-                        jsonResponse["success"] = true;
-                        jsonResponse["usuario"]["id"] = r[0]["id"].as<int>();
-                        jsonResponse["usuario"]["nombre"] = r[0]["nombre"].as<std::string>();
-                        jsonResponse["usuario"]["email"] = r[0]["email"].as<std::string>();
-                        jsonResponse["usuario"]["created_at"] = r[0]["created_at"].as<std::string>();
+                });
+        },
+        {Get});
+
+    // Login
+    app().registerHandler("/login",
+        [clientPtr](const HttpRequestPtr &req,
+                   std::function<void(const HttpResponsePtr &)> &&callback) {
+            auto jsonPtr = req->getJsonObject();
+            if (!jsonPtr) {
+                Json::Value error;
+                error["success"] = false;
+                error["message"] = "JSON inválido";
+                auto resp = HttpResponse::newHttpJsonResponse(error);
+                resp->setStatusCode(k400BadRequest);
+                callback(resp);
+                return;
+            }
+
+            std::string email = (*jsonPtr)["email"].asString();
+            std::string password = (*jsonPtr)["password"].asString();
+
+            clientPtr->execSqlAsync(
+                "SELECT id, nombre, email FROM usuarios WHERE email = $1 AND password = $2",
+                [callback](const Result &r) {
+                    Json::Value response;
+                    if (r.size() > 0) {
+                        Json::Value usuario;
+                        usuario["id"] = r[0]["id"].as<int>();
+                        usuario["nombre"] = r[0]["nombre"].as<std::string>();
+                        usuario["email"] = r[0]["email"].as<std::string>();
                         
-                        auto resp = HttpResponse::newHttpJsonResponse(jsonResponse);
-                        resp->setStatusCode(k201Created);
-                        callback(resp);
-                    },
-                    [callback](const drogon::orm::DrogonDbException &e) {
-                        // Error (probablemente email duplicado)
-                        Json::Value jsonError;
-                        jsonError["success"] = false;
-                        
-                        std::string errorMsg = e.base().what();
-                        if (errorMsg.find("unique") != std::string::npos || 
-                            errorMsg.find("duplicate") != std::string::npos) {
-                            jsonError["error"] = "El email ya está registrado";
-                        } else {
-                            jsonError["error"] = "Error al crear usuario";
-                        }
-                        
-                        auto resp = HttpResponse::newHttpJsonResponse(jsonError);
-                        resp->setStatusCode(k400BadRequest);
-                        callback(resp);
-                    },
-                    nombre,
-                    email,
-                    password
-                );
-            })
+                        response["success"] = true;
+                        response["usuario"] = usuario;
+                    } else {
+                        response["success"] = false;
+                        response["message"] = "Credenciales inválidas";
+                    }
+                    auto resp = HttpResponse::newHttpJsonResponse(response);
+                    callback(resp);
+                },
+                [callback](const DrogonDbException &e) {
+                    Json::Value error;
+                    error["success"] = false;
+                    error["message"] = "Error en login: " + std::string(e.base().what());
+                    auto resp = HttpResponse::newHttpJsonResponse(error);
+                    resp->setStatusCode(k500InternalServerError);
+                    callback(resp);
+                },
+                email, password);
+        },
+        {Post});
+
+    // Registro
+    app().registerHandler("/registro",
+        [clientPtr](const HttpRequestPtr &req,
+                   std::function<void(const HttpResponsePtr &)> &&callback) {
+            auto jsonPtr = req->getJsonObject();
+            if (!jsonPtr) {
+                Json::Value error;
+                error["success"] = false;
+                error["message"] = "JSON inválido";
+                auto resp = HttpResponse::newHttpJsonResponse(error);
+                resp->setStatusCode(k400BadRequest);
+                callback(resp);
+                return;
+            }
+
+            std::string nombre = (*jsonPtr)["nombre"].asString();
+            std::string email = (*jsonPtr)["email"].asString();
+            std::string password = (*jsonPtr)["password"].asString();
+
+            clientPtr->execSqlAsync(
+                "INSERT INTO usuarios (nombre, email, password) VALUES ($1, $2, $3) RETURNING id",
+                [callback, nombre, email](const Result &r) {
+                    Json::Value response;
+                    response["success"] = true;
+                    response["usuario"]["id"] = r[0]["id"].as<int>();
+                    response["usuario"]["nombre"] = nombre;
+                    response["usuario"]["email"] = email;
+                    auto resp = HttpResponse::newHttpJsonResponse(response);
+                    callback(resp);
+                },
+                [callback](const DrogonDbException &e) {
+                    Json::Value error;
+                    error["success"] = false;
+                    error["message"] = "Error en registro: " + std::string(e.base().what());
+                    auto resp = HttpResponse::newHttpJsonResponse(error);
+                    resp->setStatusCode(k500InternalServerError);
+                    callback(resp);
+                },
+                nombre, email, password);
+        },
+        {Post});
 
         // Ruta para obtener lugares de la base de datos
         .registerHandler("/lugares",
