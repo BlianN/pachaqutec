@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # Servicio de PostgreSQL
+  postgres:
+    image: postgres:15
+    container_name: pachaqutec-postgres
+    environment:
+      POSTGRES_USER: ${DB_USER:-miusuario}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-mipassword}
+      POSTGRES_DB: ${DB_NAME:-mi_base_datos}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - pachaqutec-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-miusuario} -d ${DB_NAME:-mi_base_datos}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  # Servicio del backend Drogon (C++)
+  backend:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: pachaqutec-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-mi_base_datos}
+      DB_USER: ${DB_USER:-miusuario}
+      DB_PASSWORD: ${DB_PASSWORD:-mipassword}
+    networks:
+      - pachaqutec-network
+    restart: always
+
+  # Servicio del frontend React
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - REACT_APP_API_URL=/api
+        - REACT_APP_FIREBASE_API_KEY=${FIREBASE_API_KEY}
+        - REACT_APP_FIREBASE_AUTH_DOMAIN=${FIREBASE_AUTH_DOMAIN}
+        - REACT_APP_FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
+        - REACT_APP_FIREBASE_STORAGE_BUCKET=${FIREBASE_STORAGE_BUCKET}
+        - REACT_APP_FIREBASE_MESSAGING_SENDER_ID=${FIREBASE_MESSAGING_SENDER_ID}
+        - REACT_APP_FIREBASE_APP_ID=${FIREBASE_APP_ID}
+    container_name: pachaqutec-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - pachaqutec-network
+    restart: always
+
+networks:
+  pachaqutec-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
