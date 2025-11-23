@@ -56,6 +56,31 @@ int main() {
                 resp->addHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
                 resp->addHeader("Access-Control-Allow-Credentials", "true");
             })
+        
+        // Manejar OPTIONS para CORS preflight
+        .registerPreRoutingAdvice(
+            [](const HttpRequestPtr &req) {
+                if (req->method() == Options) {
+                    auto resp = HttpResponse::newHttpResponse();
+                    resp->setStatusCode(k200OK);
+                    
+                    auto origin = req->getHeader("Origin");
+                    if (origin == "https://pachaqutec.com" ||
+                        origin == "https://www.pachaqutec.com" ||
+                        origin == "http://localhost:3000") {
+                        resp->addHeader("Access-Control-Allow-Origin", origin);
+                    }
+                    
+                    resp->addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+                    resp->addHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+                    resp->addHeader("Access-Control-Allow-Credentials", "true");
+                    resp->addHeader("Access-Control-Max-Age", "3600");
+                    
+                    return resp;
+                }
+                return HttpResponsePtr{};
+            })
+        
         // Configurar el cliente de base de datos con PostgresConfig
         .addDbClient(pgConfig)
 
