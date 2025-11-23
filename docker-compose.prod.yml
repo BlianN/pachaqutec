@@ -1,7 +1,5 @@
 version: '3.8'
-
 services:
-  # Servicio de PostgreSQL
   postgres:
     image: postgres:15
     container_name: pachaqutec-postgres
@@ -21,12 +19,13 @@ services:
       retries: 5
     restart: always
 
-  # Servicio del backend Drogon (C++)
   backend:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
     container_name: pachaqutec-backend
+    ports:
+      - "8081:8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -40,7 +39,6 @@ services:
       - pachaqutec-network
     restart: always
 
-  # Servicio del frontend React
   frontend:
     build:
       context: ./frontend
