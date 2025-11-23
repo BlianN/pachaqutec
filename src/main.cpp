@@ -40,7 +40,8 @@ int main() {
                 auto origin = req->getHeader("Origin");
                 
                 if (origin == "https://pachaqutec.com" || 
-                    origin == "https://www.pachaqutec.com") {
+                    origin == "https://www.pachaqutec.com" || 
+                    origin == "http://localhost:3000") {
                     resp->addHeader("Access-Control-Allow-Origin", origin);
                 }
                 
