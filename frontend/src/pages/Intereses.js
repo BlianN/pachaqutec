@@ -102,13 +102,10 @@ function Intereses() {
         await Promise.all(promises);
         console.log('✅ Favoritos guardados exitosamente');
       }
-      
-      // ✅ Solo navegar si todo salió bien
       navigate("/foryou");
     } catch (err) {
       console.error('Error al guardar intereses:', err);
       alert('❌ Hubo un error al guardar tus intereses. Por favor intenta de nuevo.');
-      // ❌ NO navegar si hay error - el usuario puede reintentar
     } finally {
       setGuardando(false);
     }
@@ -171,9 +168,12 @@ function Intereses() {
                     <div className="categoria-icon-grande">
                       {categoria.icono}
                     </div>
+                    {/* Overlay visual */}
+                    <div className="image-overlay"></div>
                   </div>
 
                   <div className="card-content">
+                    <div className="card-border"></div>
                     <h3>{categoria.nombre}</h3>
                     <p>{categoria.descripcion}</p>
                   </div>
@@ -205,9 +205,7 @@ function Intereses() {
                 </>
               ) : (
                 <>
-                  <span className="btn-text">
-                    🚀 Continuar a ForYou
-                  </span>
+                  <span className="btn-text">🚀 Continuar a ForYou</span>
                   <span className="btn-arrow">→</span>
                 </>
               )}
@@ -226,21 +224,24 @@ function Intereses() {
 
       {/* Modal para explorar lugares */}
       {mostrarModal && lugarActual && (
-        <div className="modal-overlay" onClick={handleCerrarModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="intereses-modal-overlay" onClick={handleCerrarModal}>
+          <div className="intereses-modal-content" onClick={(e) => e.stopPropagation()}>
+            
             {/* Header del modal */}
-            <div className="modal-header">
+            <div className="intereses-modal-header">
               <h2>{categoriaSeleccionada?.nombre}</h2>
               <button className="btn-cerrar-modal" onClick={handleCerrarModal}>✕</button>
             </div>
 
             {/* Contenido del lugar */}
-            <div className="modal-body">
+            <div className="intereses-modal-body">
               <div className="lugar-modal-image">
                 <img src={lugarActual.imagen_url} alt={lugarActual.nombre} />
                 <div className="lugar-contador">
-                  {indiceActual + 1} de {lugaresCategoria.length}
+                  {indiceActual + 1} / {lugaresCategoria.length}
                 </div>
+                {/* Degradado sobre la imagen para mejor lectura */}
+                <div className="lugar-overlay-gradient"></div>
               </div>
 
               <div className="lugar-modal-info">
@@ -251,22 +252,22 @@ function Intereses() {
                   className={`btn-seleccionar ${lugaresSeleccionados.has(lugarActual.id) ? 'seleccionado' : ''}`}
                   onClick={() => handleToggleSeleccion(lugarActual.id)}
                 >
-                  {lugaresSeleccionados.has(lugarActual.id) ? '❤️ Seleccionado' : '🤍 Seleccionar'}
+                  {lugaresSeleccionados.has(lugarActual.id) ? '❤️ Agregado a Favoritos' : '🤍 Agregar a Favoritos'}
                 </button>
               </div>
             </div>
 
             {/* Navegación */}
-            <div className="modal-navigation">
+            <div className="intereses-modal-navigation">
               <button
-                className="btn-nav"
+                className="btn-nav anterior"
                 onClick={handleAnterior}
                 disabled={indiceActual === 0}
               >
                 ← Anterior
               </button>
               <button
-                className="btn-nav"
+                className="btn-nav siguiente"
                 onClick={handleSiguiente}
                 disabled={indiceActual === lugaresCategoria.length - 1}
               >
@@ -293,9 +294,8 @@ function Intereses() {
             </div>
             <div className="footer-info">
               <p>
-                Proyecto académico - Desarrollo Basado en Plataformas<br />
-                Universidad Católica San Pablo<br />
-                Copyright© 2025. Todos los derechos reservados.
+                Proyecto académico - DBP 2025<br />
+                Copyright© Todos los derechos reservados.
               </p>
             </div>
           </div>
