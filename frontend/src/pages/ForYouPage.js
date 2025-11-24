@@ -19,7 +19,7 @@ function ForYouPage() {
   const [loadingFavoritos, setLoadingFavoritos] = useState(false);
   const [errorFavoritos, setErrorFavoritos] = useState(null);
 
-  // IDs de lugares favoritos (para marcar botones)
+  // IDs de lugares favoritos
   const [favoritosIds, setFavoritosIds] = useState(new Set());
 
   // Estado para almacenar reseñas del backend
@@ -96,7 +96,6 @@ function ForYouPage() {
       
       if (data.success) {
         setCategorias(data.categorias);
-        // Cargar lugares de cada categoría
         const lugaresPromises = data.categorias.map(cat => 
           obtenerLugaresPorCategoria(cat.id)
         );
@@ -105,7 +104,16 @@ function ForYouPage() {
         const lugaresMap = {};
         data.categorias.forEach((cat, index) => {
           if (lugaresResults[index].success) {
-            lugaresMap[cat.id] = lugaresResults[index].lugares;
+            const lugaresBrutos = lugaresResults[index].lugares;
+
+            // FILTRO ANTI-DUPLICADOS
+            const lugaresUnicos = lugaresBrutos.filter((lugar, indice, self) => 
+              indice === self.findIndex((t) => (
+                t.nombre.trim().toLowerCase() === lugar.nombre.trim().toLowerCase()
+              ))
+            );
+
+            lugaresMap[cat.id] = lugaresUnicos;
           }
         });
         setLugaresPorCategoria(lugaresMap);
@@ -262,14 +270,23 @@ function ForYouPage() {
             <span className="orange">Qutec</span>
           </h1>
         </div>
+
         <nav className="navigation">
-          <a href="#inicio" className="nav-link">Inicio</a>
-          <a href="#lugares" className="nav-link">Lugares</a>
-          <a href="#favoritos" className="nav-link">Favoritos</a>
-          <a href="#contactanos" className="nav-link">Contáctanos</a>
+          <button onClick={() => navigate("/foryou")} className="nav-link">Inicio</button>
+          <button onClick={() => navigate("/lugares")} className="nav-link">Lugares</button>
+          <button onClick={() => navigate("/favoritos")} className="nav-link">Favoritos</button>
+          <button 
+            onClick={() => navigate("/rutas")} 
+            className="nav-link"
+            title="Ver mapa de rutas"
+          >
+          Rutas
+          </button>
+          <button onClick={() => navigate("/reseñas")} className="nav-link">Reseñas</button>
+          <button onClick={() => navigate("/contactanos")} className="nav-link">Contáctanos</button>
           {usuarioLogueado && (
-            <span style={{color: 'white', marginRight: '1rem'}}>
-              👤 {usuarioLogueado.nombre}
+            <span className="user-welcome">
+              Hola, <strong>{usuarioLogueado.nombre}</strong>
             </span>
           )}
           <button 
@@ -277,17 +294,17 @@ function ForYouPage() {
             className="nav-link nav-rdf"
             title="Ver datos en formato RDF"
           >
-            🌐 Datos RDF
+            🌐 RDF
           </button>
-          <button onClick={handleLogout} className="nav-link" style={{background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: 'inherit'}}>
-            Cerrar sesión
+          <button onClick={handleLogout} className="nav-link logout-btn">
+            Salir
           </button>
         </nav>
       </header>
 
       {/* Contenido principal */}
       <main className="foryou-main">
-        {/* Banner Cañon del Colca CON IMAGEN */}
+        {/* Banner Cañon del Colca */}
         <section 
           className="banner-colca-con-imagen"
           style={{ 
@@ -296,46 +313,43 @@ function ForYouPage() {
         >
           <div className="banner-overlay">
             <div className="banner-content-con-imagen">
-              <h1>Cañon del Colca</h1>
-              <button className="ver-mas-btn-con-imagen">ver más</button>
+              <span className="banner-subtitle">Destino Destacado</span>
+              <h1>Cañón del Colca</h1>
+              <button className="ver-mas-btn-con-imagen">Explorar ahora</button>
             </div>
           </div>
         </section>
 
-        {/* Línea divisoria */}
-        <div className="divisor"></div>
-
         {/* Sección Lugares por Categorías */}
         <section className="lugares-section">
-          <h2 className="section-title">🏛️ Descubre Arequipa</h2>
+          <div className="section-header-container">
+             <h2 className="section-title">🏛️ Descubre Arequipa</h2>
+             <p className="section-subtitle">Explora los tesoros escondidos de la ciudad blanca</p>
+          </div>
           
           {loadingCategorias && (
-            <p style={{
-              textAlign: 'center', 
-              padding: '2rem',
-              fontSize: '1.2rem',
-              color: '#667eea'
-            }}>
-              ⏳ Cargando lugares turísticos...
-            </p>
+            <div className="loading-container">
+              <div className="spinner"></div>
+              <p>Cargando experiencias...</p>
+            </div>
           )}
           
           {!loadingCategorias && categorias.length > 0 && (
             <div className="categorias-container">
               {categorias.map((categoria) => (
-                <div key={categoria.id} className="categoria-section">
-                  {/* Header de categoría */}
+                <div key={categoria.id} className={`categoria-section ${categoriaExpandida === categoria.id ? 'expanded' : ''}`}>
+
                   <div 
                     className="categoria-header"
                     onClick={() => setCategoriaExpandida(
                       categoriaExpandida === categoria.id ? null : categoria.id
                     )}
                     style={{
-                      borderLeft: `4px solid ${categoria.color}`
+                      borderLeft: `4px solid ${categoria.color || '#ff6b00'}`
                     }}
                   >
                     <div className="categoria-info">
-                      <span className="categoria-icono" style={{fontSize: '2rem'}}>
+                      <span className="categoria-icono">
                         {categoria.icono}
                       </span>
                       <div>
@@ -347,280 +361,52 @@ function ForYouPage() {
                       <span className="lugares-count">
                         {lugaresPorCategoria[categoria.id]?.length || 0} lugares
                       </span>
-                      <span className="toggle-icon">
-                        {categoriaExpandida === categoria.id ? '▼' : '▶'}
+                      <span className={`toggle-icon ${categoriaExpandida === categoria.id ? 'rotated' : ''}`}>
+                        ▼
                       </span>
                     </div>
                   </div>
 
                   {/* Lugares de la categoría (expandible) */}
-                  {categoriaExpandida === categoria.id && lugaresPorCategoria[categoria.id] && (
-                    <div className="lugares-grid categoria-lugares-grid">
-                      {lugaresPorCategoria[categoria.id].map((lugar) => (
-                        <div key={lugar.id} className="lugar-card" style={{position: 'relative'}}>
-                          {/* Botón de favorito */}
-                          <button
-                            onClick={() => handleToggleFavorito(lugar.id)}
-                            style={{
-                              position: 'absolute',
-                              top: '10px',
-                              right: '10px',
-                              background: 'white',
-                              border: 'none',
-                              borderRadius: '50%',
-                              width: '40px',
-                              height: '40px',
-                              fontSize: '1.5rem',
-                              cursor: 'pointer',
-                              boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                              transition: 'transform 0.2s',
-                              zIndex: 10
-                            }}
-                            onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
-                            onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
-                            title={favoritosIds.has(lugar.id) ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-                          >
-                            {favoritosIds.has(lugar.id) ? '❤️' : '🤍'}
-                          </button>
-                          
-                          <div className="lugar-image">
-                            <img src={lugar.imagen_url} alt={lugar.nombre} />
-                          </div>
-                          <h3>{lugar.nombre}</h3>
-                          <p style={{
-                            color: '#666', 
-                            fontSize: '0.9rem',
-                            margin: '0.5rem 0',
-                            lineHeight: '1.4',
-                            padding: '0 1rem'
-                          }}>
-                            {lugar.descripcion}
-                          </p>
-
-                          {/* Botón Escribir reseña */}
-                          <button
-                            onClick={() => handleAbrirModalResena(lugar)}
-                            style={{
-                              width: 'calc(100% - 2rem)',
-                              margin: '0.75rem 1rem 1rem',
-                              padding: '0.5rem',
-                              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '8px',
-                              cursor: 'pointer',
-                              fontSize: '0.9rem',
-                              fontWeight: 'bold',
-                              transition: 'transform 0.2s'
-                            }}
-                            onMouseEnter={(e) => e.target.style.transform = 'translateY(-2px)'}
-                            onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
-                          >
-                            ✍️ Escribir reseña
-                          </button>
+                  <div className={`categoria-lugares-wrapper ${categoriaExpandida === categoria.id ? 'open' : ''}`}>
+                    {lugaresPorCategoria[categoria.id] && (
+                        <div className="lugares-grid categoria-lugares-grid">
+                        {lugaresPorCategoria[categoria.id].map((lugar) => (
+                            <div key={lugar.id} className="lugar-card">
+                            {/* Botón de favorito */}
+                            <button
+                                className={`favorito-btn ${favoritosIds.has(lugar.id) ? 'is-favorito' : ''}`}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleToggleFavorito(lugar.id);
+                                }}
+                                title={favoritosIds.has(lugar.id) ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                            >
+                                {favoritosIds.has(lugar.id) ? '❤️' : '🤍'}
+                            </button>
+                            
+                            <div className="lugar-image">
+                                <img src={lugar.imagen_url} alt={lugar.nombre} loading="lazy" />
+                                <div className="lugar-overlay-gradient"></div>
+                            </div>
+                            
+                            <div className="lugar-content">
+                                <h3>{lugar.nombre}</h3>
+                                <p className="lugar-desc">
+                                {lugar.descripcion}
+                                </p>
+                                <button
+                                className="review-btn"
+                                onClick={() => handleAbrirModalResena(lugar)}
+                                >
+                                ✍️ Escribir reseña
+                                </button>
+                            </div>
+                            </div>
+                        ))}
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
-        {/* Línea divisoria */}
-        <div className="divisor"></div>
-
-        {/* Sección Tus favoritos */}
-        <section className="favoritos-section">
-          <h2 className="section-title">❤️ Tus Favoritos</h2>
-          
-          {!usuarioLogueado && (
-            <p style={{
-              textAlign: 'center', 
-              padding: '2rem', 
-              color: '#999',
-              fontSize: '1.1rem'
-            }}>
-              🔒 Inicia sesión para ver tus favoritos
-            </p>
-          )}
-          
-          {usuarioLogueado && loadingFavoritos && (
-            <p style={{
-              textAlign: 'center', 
-              padding: '2rem',
-              fontSize: '1.2rem',
-              color: '#667eea'
-            }}>
-              ⏳ Cargando tus favoritos...
-            </p>
-          )}
-          
-          {usuarioLogueado && errorFavoritos && (
-            <div style={{
-              background: '#fee',
-              border: '2px solid #fcc',
-              borderRadius: '8px',
-              padding: '1rem',
-              margin: '1rem 0',
-              color: '#c33'
-            }}>
-              ❌ {errorFavoritos}
-            </div>
-          )}
-          
-          {usuarioLogueado && !loadingFavoritos && !errorFavoritos && favoritosBackend.length === 0 && (
-            <p style={{
-              textAlign: 'center', 
-              padding: '2rem', 
-              color: '#999',
-              fontSize: '1.1rem'
-            }}>
-              💔 No tienes favoritos aún. ¡Agrega algunos lugares!
-            </p>
-          )}
-          
-          {usuarioLogueado && !loadingFavoritos && !errorFavoritos && favoritosBackend.length > 0 && (
-            <div className="favoritos-grid">
-              {favoritosBackend.map((favorito) => (
-                <div key={favorito.favorito_id} className="favorito-card" style={{position: 'relative'}}>
-                  {/* Botón para quitar de favoritos */}
-                  <button
-                    onClick={() => handleToggleFavorito(favorito.id)}
-                    style={{
-                      position: 'absolute',
-                      top: '10px',
-                      right: '10px',
-                      background: 'white',
-                      border: 'none',
-                      borderRadius: '50%',
-                      width: '40px',
-                      height: '40px',
-                      fontSize: '1.5rem',
-                      cursor: 'pointer',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                      zIndex: 10
-                    }}
-                    title="Quitar de favoritos"
-                  >
-                    ❤️
-                  </button>
-                  
-                  <div className="favorito-image">
-                    <img src={favorito.imagen_url} alt={favorito.nombre} />
+                    )}
                   </div>
-                  <h3>{favorito.nombre}</h3>
-                  <p style={{
-                    color: '#666', 
-                    fontSize: '0.9rem',
-                    margin: '0.5rem 0',
-                    lineHeight: '1.4'
-                  }}>
-                    {favorito.descripcion}
-                  </p>
-                  <span style={{
-                    display: 'inline-block',
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    color: 'white',
-                    padding: '0.25rem 0.75rem',
-                    borderRadius: '12px',
-                    fontSize: '0.8rem',
-                    marginTop: '0.5rem'
-                  }}>
-                    {favorito.categoria}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
-        {/* Línea divisoria */}
-        <div className="divisor"></div>
-        
-
-        {/* Sección Tus reseñas */}
-        <section className="resenas-section-simple">
-          <h2 className="section-title">📝 Tus Reseñas</h2>
-          
-          {!usuarioLogueado && (
-            <p style={{
-              textAlign: 'center', 
-              padding: '2rem', 
-              color: '#999',
-              fontSize: '1.1rem'
-            }}>
-              🔒 Inicia sesión para ver tus reseñas
-            </p>
-          )}
-          
-          {usuarioLogueado && loadingResenas && (
-            <p style={{
-              textAlign: 'center', 
-              padding: '2rem',
-              fontSize: '1.2rem',
-              color: '#667eea'
-            }}>
-              ⏳ Cargando tus reseñas...
-            </p>
-          )}
-          
-          {usuarioLogueado && errorResenas && (
-            <div style={{
-              background: '#fee',
-              border: '2px solid #fcc',
-              borderRadius: '8px',
-              padding: '1rem',
-              margin: '1rem 0',
-              color: '#c33'
-            }}>
-              ❌ {errorResenas}
-            </div>
-          )}
-          
-          {usuarioLogueado && !loadingResenas && !errorResenas && resenasBackend.length === 0 && (
-            <p style={{
-              textAlign: 'center', 
-              padding: '2rem', 
-              color: '#999',
-              fontSize: '1.1rem'
-            }}>
-              📭 No has escrito reseñas aún. ¡Escribe tu primera reseña!
-            </p>
-          )}
-          
-          {usuarioLogueado && !loadingResenas && !errorResenas && resenasBackend.length > 0 && (
-            <div style={{display: 'flex', flexDirection: 'column', gap: '1.5rem'}}>
-              {resenasBackend.map((resena) => (
-                <div key={resena.id} className="resena-card-simple">
-                  <div style={{display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem'}}>
-                    <img 
-                      src={resena.lugar_imagen} 
-                      alt={resena.lugar_nombre}
-                      style={{
-                        width: '80px',
-                        height: '80px',
-                        borderRadius: '8px',
-                        objectFit: 'cover'
-                      }}
-                    />
-                    <div>
-                      <h3 className="resena-lugar-title">{resena.lugar_nombre}</h3>
-                      <div style={{color: '#FFD700', fontSize: '1.2rem'}}>
-                        {'★'.repeat(resena.calificacion)}
-                        {'☆'.repeat(5 - resena.calificacion)}
-                      </div>
-                      <p style={{color: '#999', fontSize: '0.85rem', margin: '0.25rem 0'}}>
-                        {new Date(resena.created_at).toLocaleDateString('es-ES', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
-                      </p>
-                    </div>
-                  </div>
-                  <p className="resena-texto">{resena.texto}</p>
                 </div>
               ))}
             </div>
@@ -629,10 +415,10 @@ function ForYouPage() {
 
       </main>
       
-      {/* Asistente Virtual - Posición fija */}
+      {/* Asistente Virtual */}
       <div className="asistente-virtual-fijo">
         <div className="asistente-tooltip">
-          Hola, soy tu asistente virtual de viajes, ¿en qué te puedo ayudar el día de hoy?
+          ¿Necesitas ayuda con tu viaje?
         </div>
         <button className="asistente-btn">
           💬
@@ -641,101 +427,53 @@ function ForYouPage() {
       
       {/* Modal para crear reseña */}
       {mostrarModalResena && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0,0,0,0.7)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            background: 'white',
-            borderRadius: '16px',
-            padding: '2rem',
-            maxWidth: '500px',
-            width: '90%',
-            maxHeight: '80vh',
-            overflow: 'auto'
-          }}>
-            <h2 style={{marginBottom: '1rem', color: '#333'}}>
-              ✍️ Escribir reseña sobre {lugarSeleccionado?.nombre}
-            </h2>
+        <div className="modal-overlay" onClick={handleCerrarModalResena}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+                <h2>✍️ Nueva Reseña</h2>
+                <button className="modal-close" onClick={handleCerrarModalResena}>&times;</button>
+            </div>
+            
+            <p className="modal-subtitle">Cuéntanos tu experiencia en <strong>{lugarSeleccionado?.nombre}</strong></p>
             
             <form onSubmit={handleCrearResena}>
-              <div style={{marginBottom: '1rem'}}>
-                <label style={{display: 'block', marginBottom: '0.5rem', color: '#555', fontWeight: 'bold'}}>
-                  Calificación:
-                </label>
-                <div style={{fontSize: '2rem', color: '#FFD700'}}>
+              <div className="form-group">
+                <label>Calificación</label>
+                <div className="star-rating">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <span
                       key={star}
                       onClick={() => setNuevaResena({...nuevaResena, calificacion: star})}
-                      style={{cursor: 'pointer', marginRight: '0.25rem'}}
+                      className={star <= nuevaResena.calificacion ? 'star filled' : 'star'}
                     >
-                      {star <= nuevaResena.calificacion ? '★' : '☆'}
+                      ★
                     </span>
                   ))}
                 </div>
               </div>
               
-              <div style={{marginBottom: '1.5rem'}}>
-                <label style={{display: 'block', marginBottom: '0.5rem', color: '#555', fontWeight: 'bold'}}>
-                  Tu reseña:
-                </label>
+              <div className="form-group">
+                <label>Tu opinión</label>
                 <textarea
                   value={nuevaResena.texto}
                   onChange={(e) => setNuevaResena({...nuevaResena, texto: e.target.value})}
-                  placeholder="Comparte tu experiencia..."
-                  rows={6}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #ddd',
-                    borderRadius: '8px',
-                    fontSize: '1rem',
-                    fontFamily: 'inherit',
-                    resize: 'vertical'
-                  }}
+                  placeholder="¿Qué fue lo que más te gustó? ¿Qué se podría mejorar?"
+                  rows={5}
                   required
                 />
               </div>
               
-              <div style={{display: 'flex', gap: '1rem'}}>
+              <div className="modal-actions">
                 <button
                   type="button"
                   onClick={handleCerrarModalResena}
-                  style={{
-                    flex: 1,
-                    padding: '0.75rem',
-                    background: '#f0f0f0',
-                    border: 'none',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontSize: '1rem',
-                    fontWeight: 'bold'
-                  }}
+                  className="btn-cancel"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  style={{
-                    flex: 1,
-                    padding: '0.75rem',
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontSize: '1rem',
-                    fontWeight: 'bold'
-                  }}
+                  className="btn-submit"
                 >
                   Publicar reseña
                 </button>
@@ -747,10 +485,17 @@ function ForYouPage() {
 
       {/* Footer */}
       <footer className="foryou-footer">
-        <p>
-          Proyecto académico - Desarrollo Basado en Plataformas Universidad Católica San Pablo<br />
-          Copyright© 2025. Todos los derechos reservados.
-        </p>
+        <div className="footer-content">
+            <div className="footer-logo">
+                <span className="black">Pacha</span><span className="orange">Qutec</span>
+            </div>
+            <p>
+            Desarrollo Basado en Plataformas - Universidad Católica San Pablo
+            </p>
+            <p className="copyright">
+            © 2025 Todos los derechos reservados.
+            </p>
+        </div>
       </footer>
     </div>
   );

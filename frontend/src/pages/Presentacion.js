@@ -7,218 +7,147 @@ function Presentacion() {
 
   return (
     <div className="presentacion-container">
-      {/* Header elegante */}
+      <style>
+        {`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap');`}
+      </style>
+
       <header className="presentacion-header">
-        <div className="logo">
-          <div className="mountain"></div>
-          <div className="logo-text">
-            <span className="black">Pacha</span>
-            <span className="orange">Qutec</span>
+        <div className="header-content">
+          <div className="logo">
+            <div className="mountain-icon"></div>
+            <div className="logo-text">
+              <span className="text-dark">Pacha</span>
+              <span className="text-orange">Qutec</span>
+            </div>
           </div>
+          <button 
+            className="btn-iniciar-sesion"
+            onClick={() => navigate("/login")}
+          >
+            Iniciar Sesión
+          </button>
         </div>
-        <button 
-          className="btn-iniciar-sesion"
-          onClick={() => navigate("/login")}
-        >
-          Iniciar Sesión
-        </button>
       </header>
 
-      {/* Hero section con imagen espectacular */}
       <section className="hero-section">
-        <div className="hero-background">
-          <div className="hero-overlay"></div>
-        </div>
+        <div className="hero-background"></div>
+        <div className="hero-overlay"></div>
         
         <div className="hero-content">
-          <div className="hero-badge">
-            <span>✨ Descubre Arequipa como nunca antes</span>
+          <div className="hero-badge animate-float">
+            <span>✨ Descubre Arequipa nivel legendario</span>
           </div>
           
           <h1 className="hero-title">
-            Vive la magia de la <span className="highlight">Ciudad Blanca</span>
+            Vive la magia de la <br />
+            <span className="highlight-text">Ciudad Blanca</span>
           </h1>
           
           <p className="hero-description">
-            Tu compañero inteligente para explorar los secretos mejor guardados de Arequipa. 
-            Rutas personalizadas, experiencias únicas y recuerdos inolvidables.
+            Tu compañero inteligente para explorar los secretos de Arequipa. 
+            Rutas con IA, experiencias únicas y recuerdos que duran para siempre.
           </p>
 
-          <div className="hero-stats">
-            <div className="stat">
+          <div className="hero-stats animate-fade-up">
+            <div className="stat-item">
               <span className="stat-number">50+</span>
-              <span className="stat-label">Lugares únicos</span>
+              <span className="stat-label">Destinos</span>
             </div>
-            <div className="stat">
-              <span className="stat-number">24/7</span>
-              <span className="stat-label">Asistente virtual</span>
+            <div className="stat-divider"></div>
+            <div className="stat-item">
+              <span className="stat-number">AI</span>
+              <span className="stat-label">Powered</span>
             </div>
-            <div className="stat">
+            <div className="stat-divider"></div>
+            <div className="stat-item">
               <span className="stat-number">100%</span>
-              <span className="stat-label">Personalizado</span>
+              <span className="stat-label">Arequipeño</span>
             </div>
           </div>
 
           <div className="hero-actions">
             <button 
-              className="btn-primary"
+              className="btn-primary-glow"
               onClick={() => navigate("/login")}
             >
-              🗺️ Comenzar mi aventura
-            </button>
-            <button 
-              className="btn-secondary"
-              onClick={() => document.getElementById('equipo').scrollIntoView({ behavior: 'smooth' })}
-            >
-              👥 Conocer al equipo
+              🚀 Comenzar mi aventura
             </button>
           </div>
+        </div>
 
-          <div className="scroll-indicator">
-            <span>Desliza para descubrir</span>
-            <div className="arrow-down"></div>
+        <div className="scroll-indicator">
+          <div className="mouse">
+            <div className="wheel"></div>
           </div>
         </div>
       </section>
 
-      {/* Sección del equipo */}
-      <section id="equipo" className="equipo-section">
-        <div className="container">
-          <div className="section-header">
-            <h2>El corazón detrás de PachaQutec</h2>
-            <p>Un equipo de estudiantes apasionados por transformar el turismo en Arequipa</p>
-          </div>
-          
-          <div className="equipo-grid">
-            <div className="integrante-card">
-              <div className="integrante-header">
-                <div className="avatar">DM</div>
-                <div className="integrante-info">
-                  <h3>Diego Miguel Calancho</h3>
-                  <span className="role">Desarrollador Frontend</span>
-                </div>
-              </div>
-              <p>Creando experiencias digitales que enamoran a primera vista</p>
-            </div>
-            
-            <div className="integrante-card">
-              <div className="integrante-header">
-                <div className="avatar">MP</div>
-                <div className="integrante-info">
-                  <h3>Mijael Pol Escobar</h3>
-                  <span className="role">Especialista en IA</span>
-                </div>
-              </div>
-              <p>Dando inteligencia a cada recomendación y ruta personalizada</p>
-            </div>
-            
-            <div className="integrante-card">
-              <div className="integrante-header">
-                <div className="avatar">RF</div>
-                <div className="integrante-info">
-                  <h3>Rodrigo Fredy Sulla</h3>
-                  <span className="role">Diseñador UX/UI</span>
-                </div>
-              </div>
-              <p>Diseñando interfaces que se sienten como en casa</p>
-            </div>
-            
-            <div className="integrante-card">
-              <div className="integrante-header">
-                <div className="avatar">AR</div>
-                <div className="integrante-info">
-                  <h3>Alessandro Raul Paredes</h3>
-                  <span className="role">Arquitecto de Software</span>
-                </div>
-              </div>
-              <p>Construyendo los cimientos para una experiencia sin igual</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Sección de características */}
       <section className="features-section">
         <div className="container">
           <div className="section-header">
-            <h2>¿Por qué elegir PachaQutec?</h2>
-            <p>Más que una app, es tu compañero de viaje personal</p>
+            <h2 className="gradient-title">¿Por qué PachaQutec?</h2>
+            <p>No es solo una app, es tu "pata" digital en Arequipa.</p>
           </div>
 
           <div className="features-grid">
             <div className="feature-card">
-              <div className="feature-icon">🎯</div>
-              <h3>Recomendaciones inteligentes</h3>
-              <p>IA que aprende de tus gustos para sugerirte experiencias que realmente te van a encantar</p>
+              <div className="icon-wrapper color-1">🎯</div>
+              <h3>Rutas IA</h3>
+              <p>Nuestro algoritmo aprende qué te gusta y te arma el plan perfecto. Sin rodeos.</p>
             </div>
 
             <div className="feature-card">
-              <div className="feature-icon">🤖</div>
-              <h3>Asistente virtual 24/7</h3>
-              <p>Resuelve tus dudas en tiempo real y te ayuda a planificar cada detalle de tu aventura</p>
+              <div className="icon-wrapper color-2">🤖</div>
+              <h3>Asistente 24/7</h3>
+              <p>¿Te perdiste? ¿Hambre a las 2 AM? El asistente virtual te salva al toque.</p>
             </div>
 
             <div className="feature-card">
-              <div className="feature-icon">🏔️</div>
-              <h3>Enfoque local auténtico</h3>
-              <p>Descubre Arequipa a través de los ojos de quienes realmente la conocen</p>
+              <div className="icon-wrapper color-3">🏔️</div>
+              <h3>Local Vibe</h3>
+              <p>Aléjate de las trampas para turistas. Te llevamos donde comen los arequipeños.</p>
             </div>
 
             <div className="feature-card">
-              <div className="feature-icon">🕒</div>
-              <h3>Adaptado a tu tiempo</h3>
-              <p>Ya sea un día o una semana, creamos rutas perfectas para tu disponibilidad</p>
+              <div className="icon-wrapper color-4">⚡</div>
+              <h3>A tu ritmo</h3>
+              <p>¿Tienes 2 horas o 2 semanas? Optimizamos tu tiempo al máximo.</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
       <section className="cta-section">
         <div className="container">
-          <div className="cta-card">
-            <h2>¿Listo para tu próxima aventura?</h2>
-            <p>Únete a miles de viajeros que ya descubrieron Arequipa con nosotros</p>
-            <button 
-              className="btn-cta"
-              onClick={() => navigate("/login")}
-            >
-              🚀 Empezar ahora
-            </button>
-            <div className="cta-stats">
-              <span>✅ +2,000 viajeros satisfechos</span>
-              <span>⭐ 4.8/5 rating</span>
-              <span>🏆 Proyecto académico destacado</span>
+          <div className="cta-glass-panel">
+            <div className="cta-content">
+              <h2>¿Listo para tu próxima aventura?</h2>
+              <p>Únete a los viajeros que ya están descubriendo el verdadero Arequipa.</p>
+              <button 
+                className="btn-white-glow"
+                onClick={() => navigate("/login")}
+              >
+                Crear cuenta gratis
+              </button>
+            </div>
+            <div className="cta-decoration">
+              <div className="circle c1"></div>
+              <div className="circle c2"></div>
             </div>
           </div>
         </div>
       </section>
-
-      {/* Footer */}
+      
       <footer className="presentacion-footer">
-        <div className="container">
-          <div className="footer-content">
-            <div className="footer-brand">
-              <div className="logo">
-                <div className="mountain"></div>
-                <div className="logo-text">
-                  <span className="black">Pacha</span>
-                  <span className="orange">Qutec</span>
-                </div>
-              </div>
-              <p className="tagline">Tu guía personal para descubrir Arequipa</p>
-            </div>
-            
-            <div className="footer-info">
-              <div className="university-info">
-                <h4>Universidad Católica San Pablo</h4>
-                <p>Proyecto académico - Desarrollo Basado en Plataformas</p>
-              </div>
-              <div className="copyright">
-                <p>© 2025 PachaQutec. Todos los derechos reservados.</p>
-                <p>Hecho con ❤️ en Arequipa, Perú</p>
-              </div>
-            </div>
+        <div className="container footer-flex">
+          <div className="footer-brand">
+            <span className="footer-logo">PachaQutec</span>
+            <p>© 2025. Hecho con ❤️ y un buen Adobo.</p>
+          </div>
+          <div className="footer-links">
+            <span>UCSP</span>
+            <span>Proyecto DBP</span>
+            <span>Arequipa, Perú</span>
           </div>
         </div>
       </footer>

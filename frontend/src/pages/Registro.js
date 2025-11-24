@@ -78,38 +78,38 @@ function Registro() {
 
   return (
     <div className="registro-container">
-      {/* Fondo espectacular */}
+      <style>
+        {`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');`}
+      </style>
+
       <div className="registro-background">
         <div className="background-overlay"></div>
       </div>
 
-      {/* Contenido principal */}
       <div className="registro-content">
-        {/* Card del formulario */}
+        
         <div className="registro-card">
-          {/* Header del card */}
           <div className="registro-header">
-            <div className="logo">
-              <div className="mountain"></div>
-              <div className="logo-text">
-                <span className="black">Pacha</span>
-                <span className="orange">Qutec</span>
-              </div>
+            <div className="logo-container">
+              <div className="mountain-icon"></div>
+              <h1>
+                <span className="text-dark">Pacha</span>
+                <span className="text-orange">Qutec</span>
+              </h1>
             </div>
             <p className="welcome-text">Crea tu cuenta</p>
-            <p className="subtitle">Únete a nuestra comunidad de viajeros</p>
+            <p className="subtitle">Comienza tu aventura hoy mismo</p>
           </div>
 
-          {/* Formulario */}
           <form onSubmit={handleSubmit} className="registro-form">
             <div className="input-group">
               <label htmlFor="nombre">Nombre o apodo</label>
-              <div className="input-container">
+              <div className="input-wrapper">
                 <input
                   type="text"
                   id="nombre"
                   name="nombre"
-                  placeholder="pepito123"
+                  placeholder="Ej: Juan Perez"
                   value={formData.nombre}
                   onChange={handleChange}
                   required
@@ -121,7 +121,7 @@ function Registro() {
 
             <div className="input-group">
               <label htmlFor="email">Correo electrónico</label>
-              <div className="input-container">
+              <div className="input-wrapper">
                 <input
                   type="email"
                   id="email"
@@ -136,60 +136,57 @@ function Registro() {
               </div>
             </div>
 
-            <div className="input-group">
-              <label htmlFor="password">Contraseña</label>
-              <div className="input-container">
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  placeholder="••••••••"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                  disabled={loading}
-                />
-                <span className="input-icon">🔒</span>
+            <div className="form-row">
+              <div className="input-group">
+                <label htmlFor="password">Contraseña</label>
+                <div className="input-wrapper">
+                  <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="••••••"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                    disabled={loading}
+                  />
+                  <span className="input-icon">🔒</span>
+                </div>
+              </div>
+
+              <div className="input-group">
+                <label htmlFor="passwordConfirm">Confirmar</label>
+                <div className="input-wrapper">
+                  <input
+                    type="password"
+                    id="passwordConfirm"
+                    name="passwordConfirm"
+                    placeholder="••••••"
+                    value={formData.passwordConfirm}
+                    onChange={handleChange}
+                    required
+                    disabled={loading}
+                  />
+                  <span className="input-icon">🔒</span>
+                </div>
               </div>
             </div>
 
-            <div className="input-group">
-              <label htmlFor="passwordConfirm">Repetir contraseña</label>
-              <div className="input-container">
-                <input
-                  type="password"
-                  id="passwordConfirm"
-                  name="passwordConfirm"
-                  placeholder="••••••••"
-                  value={formData.passwordConfirm}
-                  onChange={handleChange}
-                  required
-                  disabled={loading}
-                />
-                <span className="input-icon">🔒</span>
-              </div>
-            </div>
-
-            {/* Checkbox términos */}
             <div className="checkbox-group">
               <label className="remember-me">
                 <input 
                   type="checkbox" 
-                  id="terms"
                   checked={aceptaTerminos}
                   onChange={(e) => setAceptaTerminos(e.target.checked)}
                   disabled={loading}
                 />
                 <span className="checkmark"></span>
-                Acepto los Términos de Uso del proyecto académico.
+                <span>Acepto los <a href="#">Términos y Condiciones</a></span>
               </label>
             </div>
 
-            {/* Mostrar errores */}
             {error && (
-              <div className="error-message">
-                ❌ {error}
-              </div>
+              <div className="error-message">❌ {error}</div>
             )}
 
             <button 
@@ -197,86 +194,55 @@ function Registro() {
               className={`registro-btn ${loading ? 'loading' : ''}`}
               disabled={loading || !aceptaTerminos}
             >
-              {loading ? (
-                <>
-                  <div className="spinner"></div>
-                  Creando cuenta...
-                </>
-              ) : (
-                '🚀 Crear cuenta'
-              )}
+              {loading ? <span className="spinner"></span> : '🚀 Crear cuenta'}
             </button>
 
-            {/* Divisor */}
             <div className="divider">
               <span>o</span>
             </div>
 
-            <button 
-              type="button" 
-              className="volver-btn"
-              onClick={handleVolverLogin}
-              disabled={loading}
-            >
-              ← Volver al login
-            </button>
+            <div className="registro-footer">
+              <p>¿Ya tienes cuenta?</p>
+              <button 
+                type="button"
+                className="login-link-btn"
+                onClick={handleVolverLogin}
+                disabled={loading}
+              >
+                Inicia sesión aquí
+              </button>
+            </div>
           </form>
-
-          {/* Footer del card */}
-          <div className="registro-footer">
-            <p>¿Ya tienes una cuenta?</p>
-            <button 
-              className="login-link"
-              onClick={handleVolverLogin}
-              disabled={loading}
-            >
-              Iniciar sesión
-            </button>
-          </div>
         </div>
 
-        {/* Texto de bienvenida lateral */}
         <div className="welcome-section">
-          <div className="welcome-content">
-            <div className="welcome-badge">
-              <span>✨ Únete a la aventura</span>
+          <div className="welcome-badge">
+            <span>✨ Únete a la aventura</span>
+          </div>
+          <h1>Tu viaje en Arequipa<br/>comienza aquí</h1>
+          <p>
+            Regístrate para acceder a rutas personalizadas, 
+            asistente virtual y los secretos mejor guardados de la Ciudad Blanca.
+          </p>
+          <div className="features-list">
+            <div className="feature-item">
+              <span className="feature-icon">🎯</span>
+              <span>Rutas IA</span>
             </div>
-            <h1>Comienza tu viaje en Arequipa</h1>
-            <p>
-              Regístrate y descubre rutas personalizadas, experiencias únicas 
-              y los secretos mejor guardados de la Ciudad Blanca.
-            </p>
-            <div className="features-list">
-              <div className="feature">
-                <span className="feature-icon">🎯</span>
-                <span>Rutas personalizadas con IA</span>
-              </div>
-              <div className="feature">
-                <span className="feature-icon">🤖</span>
-                <span>Asistente virtual 24/7</span>
-              </div>
-              <div className="feature">
-                <span className="feature-icon">⭐</span>
-                <span>Experiencias verificadas</span>
-              </div>
-              <div className="feature">
-                <span className="feature-icon">🕒</span>
-                <span>Planificación adaptada a tu tiempo</span>
-              </div>
+            <div className="feature-item">
+              <span className="feature-icon">🤖</span>
+              <span>Asistente 24/7</span>
+            </div>
+            <div className="feature-item">
+              <span className="feature-icon">⭐</span>
+              <span>Experiencias Top</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="registro-footer-page">
-        <div className="footer-content">
-          <p>
-            Proyecto académico - Desarrollo Basado en Plataformas<br />
-            Universidad Católica San Pablo<br />
-            Copyright© 2025. Todos los derechos reservados.
-          </p>
-        </div>
+      <footer className="page-footer">
+        <p>© 2025 PachaQutec - Universidad Católica San Pablo</p>
       </footer>
     </div>
   );

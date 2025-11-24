@@ -1,0 +1,344 @@
+/* Importamos la fuente moderna */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Merriweather:ital,wght@0,300;0,400;1,300&display=swap');
+
+:root {
+  --primary: #ff6b00;
+  --primary-light: #fff0e6;
+  --secondary: #2d3436;
+  --bg-color: #f8fafc;
+  --surface: #ffffff;
+  --text-main: #1e293b;
+  --text-light: #64748b;
+  --radius-lg: 20px;
+  --shadow-card: 0 10px 40px -10px rgba(0,0,0,0.08);
+  --shadow-hover: 0 20px 50px -10px rgba(0,0,0,0.12);
+}
+
+body {
+  margin: 0;
+  font-family: 'Outfit', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-main);
+}
+
+.reviews-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* HEADER */
+.reviews-header {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  padding: 0.8rem 0;
+}
+
+.header-content {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.mountain-icon {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, var(--primary), #ffa000);
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  border-radius: 2px;
+}
+
+.brand-logo h1 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  display: flex;
+}
+
+.brand-pacha { color: #000000; }
+.brand-qutec { color: var(--primary); }
+
+.header-title-wrapper {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.header-subtitle {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text-light);
+  font-weight: 600;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--secondary);
+}
+
+.btn-back {
+  background: white;
+  border: 1px solid #e2e8f0;
+  padding: 0.6rem 1.2rem;
+  border-radius: 50px;
+  font-family: inherit;
+  font-weight: 600;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-back:hover {
+  background: var(--text-main);
+  color: white;
+  border-color: var(--text-main);
+}
+
+/* MAIN CONTENT */
+.reviews-main {
+  flex: 1;
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+}
+
+/* STATES (Loading, Error, Empty) */
+.state-container {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  max-width: 500px;
+  margin: 2rem auto;
+}
+
+.icon-large { font-size: 3.5rem; margin-bottom: 1rem; display: block; }
+.state-container h3 { margin: 0 0 0.5rem; color: var(--secondary); }
+.state-container p { color: var(--text-light); margin: 0; }
+
+.loader-container {
+  text-align: center;
+  padding: 4rem;
+  color: var(--text-light);
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e2e8f0;
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* REVIEWS FEED */
+.reviews-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+/* Tarjeta de Reseña - Estilo Editorial */
+.review-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden;
+  border: 1px solid #f1f5f9;
+}
+
+.review-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-hover);
+}
+
+/* Sección Imagen */
+.review-image-container {
+  position: relative;
+  height: 100%;
+  min-height: 220px;
+  overflow: hidden;
+}
+
+.review-place-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.review-card:hover .review-place-img {
+  transform: scale(1.05);
+}
+
+.place-badge {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background: rgba(0,0,0,0.7);
+  color: white;
+  font-size: 0.7rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  text-transform: uppercase;
+  font-weight: 600;
+  backdrop-filter: blur(4px);
+}
+
+/* Sección Contenido */
+.review-content {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 1rem;
+}
+
+.place-name {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--secondary);
+  font-weight: 700;
+}
+
+.review-date {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  white-space: nowrap;
+  margin-left: 1rem;
+}
+
+/* Estrellas */
+.rating-display {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-bottom: 1.5rem;
+}
+
+.star { font-size: 1.2rem; }
+.star.filled { color: #fbbf24; }
+.star.empty { color: #e2e8f0; }
+
+.rating-text {
+  margin-left: 0.5rem;
+  font-weight: 600;
+  color: var(--text-main);
+  font-size: 0.9rem;
+  background: #f1f5f9;
+  padding: 0.2rem 0.6rem;
+  border-radius: 8px;
+}
+
+/* Cuerpo del texto */
+.review-body {
+  position: relative;
+  color: var(--text-main);
+  line-height: 1.7;
+  font-size: 1.05rem;
+  font-family: 'Merriweather', serif;
+  padding-left: 1.5rem;
+}
+
+.quote-mark {
+  position: absolute;
+  top: -10px;
+  left: -5px;
+  font-size: 4rem;
+  line-height: 1;
+  color: var(--primary-light);
+  font-family: sans-serif;
+  z-index: 0;
+}
+
+.review-body p {
+  position: relative;
+  margin: 0;
+  z-index: 1;
+}
+
+/* FOOTER */
+.reviews-footer {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-light);
+  font-size: 0.9rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+/* RESPONSIVE DESIGN */
+@media (max-width: 768px) {
+  .header-content {
+    padding: 0 1rem;
+  }
+
+  .reviews-main {
+    padding: 1.5rem 1rem;
+  }
+  
+  .header-subtitle, .header-title-wrapper {
+    display: none;
+  }
+
+  /* Cambio drástico a tarjeta vertical en móvil */
+  .review-card {
+    grid-template-columns: 1fr; /* Una sola columna */
+    grid-template-rows: 180px auto;
+  }
+
+  .review-image-container {
+    min-height: 180px;
+  }
+
+  .review-content {
+    padding: 1.5rem;
+  }
+
+  .review-header {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .review-date {
+    margin-left: 0;
+    font-size: 0.8rem;
+  }
+
+  .place-name {
+    font-size: 1.3rem;
+  }
+}
