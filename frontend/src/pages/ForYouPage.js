@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { obtenerUsuarios, obtenerLugares, obtenerFavoritos, agregarFavorito, eliminarFavorito, obtenerResenas, crearResena, obtenerCategorias, obtenerLugaresPorCategoria } from "../services/api";
 import "./ForYouPage.css";
@@ -6,7 +6,7 @@ import "./ForYouPage.css";
 function ForYouPage() {
   const navigate = useNavigate();
 
-  // Obtener usuario logueado
+  // --- ESTADOS EXISTENTES (TU LÓGICA) ---
   const [usuarioLogueado, setUsuarioLogueado] = useState(null);
   
   // Estado para almacenar lugares del backend
@@ -18,8 +18,6 @@ function ForYouPage() {
   const [favoritosBackend, setFavoritosBackend] = useState([]);
   const [loadingFavoritos, setLoadingFavoritos] = useState(false);
   const [errorFavoritos, setErrorFavoritos] = useState(null);
-
-  // IDs de lugares favoritos
   const [favoritosIds, setFavoritosIds] = useState(new Set());
 
   // Estado para almacenar reseñas del backend
@@ -30,10 +28,7 @@ function ForYouPage() {
   // Estado para modal de reseña
   const [mostrarModalResena, setMostrarModalResena] = useState(false);
   const [lugarSeleccionado, setLugarSeleccionado] = useState(null);
-  const [nuevaResena, setNuevaResena] = useState({
-    texto: '',
-    calificacion: 5
-  });
+  const [nuevaResena, setNuevaResena] = useState({ texto: '', calificacion: 5 });
 
   // Estado para categorías
   const [categorias, setCategorias] = useState([]);
@@ -41,14 +36,22 @@ function ForYouPage() {
   const [categoriaExpandida, setCategoriaExpandida] = useState(null);
   const [lugaresPorCategoria, setLugaresPorCategoria] = useState({});
 
+  // --- NUEVOS ESTADOS PARA EL CHATBOT ---
+  const [chatOpen, setChatOpen] = useState(false);
+  const [mensajes, setMensajes] = useState([
+    { id: 1, text: "¡Hola viajero! 🏔️ Soy PachaBot. ¿Buscas algún destino en especial?", sender: 'bot' }
+  ]);
+  const [inputText, setInputText] = useState("");
+  const messagesEndRef = useRef(null);
+  // -------------------------------------
+
+  // --- TU LÓGICA DE CARGA (INTACTA) ---
   const cargarFavoritos = useCallback(async () => {
     if (!usuarioLogueado) return;
-    
     try {
       setLoadingFavoritos(true);
       setErrorFavoritos(null);
       const data = await obtenerFavoritos(usuarioLogueado.id);
-      
       if (data.success) {
         const favoritos = data.favoritos || [];
         setFavoritosBackend(favoritos);
@@ -65,19 +68,14 @@ function ForYouPage() {
     }
   }, [usuarioLogueado]);
 
-
   const cargarResenas = useCallback(async () => {
     if (!usuarioLogueado) return;
-    
     try {
       setLoadingResenas(true);
       setErrorResenas(null);
       const data = await obtenerResenas(usuarioLogueado.id);
-      
       if (data.success) {
-        const resenas = data.resenas || [];
-        setResenasBackend(resenas);
-
+        setResenasBackend(data.resenas || []);
       } else {
         setErrorResenas('Error al cargar reseñas');
       }
@@ -105,14 +103,12 @@ function ForYouPage() {
         data.categorias.forEach((cat, index) => {
           if (lugaresResults[index].success) {
             const lugaresBrutos = lugaresResults[index].lugares;
-
             // FILTRO ANTI-DUPLICADOS
             const lugaresUnicos = lugaresBrutos.filter((lugar, indice, self) => 
               indice === self.findIndex((t) => (
                 t.nombre.trim().toLowerCase() === lugar.nombre.trim().toLowerCase()
               ))
             );
-
             lugaresMap[cat.id] = lugaresUnicos;
           }
         });
@@ -140,7 +136,6 @@ function ForYouPage() {
         setLoadingLugares(true);
         setErrorLugares(null);
         const data = await obtenerLugares();
-        
         if (data.success) {
           setLugaresBackend(data.lugares);
         } else {
@@ -153,32 +148,36 @@ function ForYouPage() {
         setLoadingLugares(false);
       }
     };
-
     cargarLugares();
   }, []);
 
-  // Obtener favoritos cuando hay usuario logueado
   useEffect(() => {
     if (usuarioLogueado && usuarioLogueado.id) {
       cargarFavoritos();
     }
   }, [usuarioLogueado, cargarFavoritos]);
 
-  // Obtener reseñas cuando hay usuario logueado
   useEffect(() => {
     if (usuarioLogueado && usuarioLogueado.id) {
       cargarResenas();
     }
   }, [usuarioLogueado, cargarResenas]);
 
-  // Cargar categorías al montar
   useEffect(() => {
     cargarCategorias();
   }, [cargarCategorias]);
 
+  // --- EFECTO PARA SCROLL DEL CHAT ---
+  useEffect(() => {
+    if (chatOpen && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [mensajes, chatOpen]);
+
+  // --- HANDLERS EXISTENTES ---
   const handleLogout = () => {
     localStorage.removeItem("usuario");
-    localStorage.removeItem("recordarSesion"); // Limpiar preferencia
+    localStorage.removeItem("recordarSesion");
     navigate("/login");
   };
 
@@ -187,14 +186,11 @@ function ForYouPage() {
       alert('Debes iniciar sesión para agregar favoritos');
       return;
     }
-
     try {
       if (favoritosIds.has(lugarId)) {
-        // Eliminar de favoritos
         const favorito = favoritosBackend.find(f => f.id === lugarId);
         if (favorito) {
           await eliminarFavorito(favorito.favorito_id);
-          // Actualizar estado local
           setFavoritosIds(prev => {
             const newSet = new Set(prev);
             newSet.delete(lugarId);
@@ -203,10 +199,8 @@ function ForYouPage() {
           setFavoritosBackend(prev => prev.filter(f => f.id !== lugarId));
         }
       } else {
-        // Agregar a favoritos
         const data = await agregarFavorito(usuarioLogueado.id, lugarId);
         if (data.success) {
-          // Recargar favoritos
           await cargarFavoritos();
         }
       }
@@ -234,12 +228,10 @@ function ForYouPage() {
 
   const handleCrearResena = async (e) => {
     e.preventDefault();
-    
     if (!nuevaResena.texto.trim()) {
       alert('Por favor escribe tu reseña');
       return;
     }
-
     try {
       const data = await crearResena(
         usuarioLogueado.id,
@@ -247,7 +239,6 @@ function ForYouPage() {
         nuevaResena.texto,
         nuevaResena.calificacion
       );
-      
       if (data.success) {
         alert('¡Reseña creada exitosamente!');
         handleCerrarModalResena();
@@ -257,6 +248,37 @@ function ForYouPage() {
       console.error('Error al crear reseña:', err);
       alert('Error al crear reseña');
     }
+  };
+
+  // --- HANDLERS DEL CHATBOT ---
+  const toggleChat = () => {
+    console.log("Chat toggleado. Estado nuevo:", !chatOpen);
+    setChatOpen(!chatOpen);
+  };
+
+  const handleEnviarMensaje = (e) => {
+    e.preventDefault();
+    if (!inputText.trim()) return;
+
+    const nuevoMsg = { id: Date.now(), text: inputText, sender: 'user' };
+    setMensajes(prev => [...prev, nuevoMsg]);
+    setInputText("");
+
+    // Respuesta simulada
+    setTimeout(() => {
+      const respuestas = [
+        "¡Qué interesante! Arequipa tiene mucho que ofrecer.",
+        "Estoy buscando esa información en mi base de datos...",
+        "Te recomiendo visitar el Cañón del Colca, es impresionante."
+      ];
+      const randomResp = respuestas[Math.floor(Math.random() * respuestas.length)];
+      
+      setMensajes(prev => [...prev, { 
+        id: Date.now() + 1, 
+        text: randomResp, 
+        sender: 'bot' 
+      }]);
+    }, 1000);
   };
 
   return (
@@ -275,13 +297,7 @@ function ForYouPage() {
           <button onClick={() => navigate("/foryou")} className="nav-link">Inicio</button>
           <button onClick={() => navigate("/lugares")} className="nav-link">Lugares</button>
           <button onClick={() => navigate("/favoritos")} className="nav-link">Favoritos</button>
-          <button 
-            onClick={() => navigate("/rutas")} 
-            className="nav-link"
-            title="Ver mapa de rutas"
-          >
-          Rutas
-          </button>
+          <button onClick={() => navigate("/rutas")} className="nav-link" title="Ver mapa de rutas">Rutas</button>
           <button onClick={() => navigate("/reseñas")} className="nav-link">Reseñas</button>
           <button onClick={() => navigate("/contactanos")} className="nav-link">Contáctanos</button>
           {usuarioLogueado && (
@@ -289,16 +305,8 @@ function ForYouPage() {
               Hola, <strong>{usuarioLogueado.nombre}</strong>
             </span>
           )}
-          <button 
-            onClick={() => navigate("/rdf")} 
-            className="nav-link nav-rdf"
-            title="Ver datos en formato RDF"
-          >
-            🌐 RDF
-          </button>
-          <button onClick={handleLogout} className="nav-link logout-btn">
-            Salir
-          </button>
+          <button onClick={() => navigate("/rdf")} className="nav-link nav-rdf" title="Ver datos en formato RDF">🌐 RDF</button>
+          <button onClick={handleLogout} className="nav-link logout-btn">Salir</button>
         </nav>
       </header>
 
@@ -344,14 +352,10 @@ function ForYouPage() {
                     onClick={() => setCategoriaExpandida(
                       categoriaExpandida === categoria.id ? null : categoria.id
                     )}
-                    style={{
-                      borderLeft: `4px solid ${categoria.color || '#ff6b00'}`
-                    }}
+                    style={{ borderLeft: `4px solid ${categoria.color || '#ff6b00'}` }}
                   >
                     <div className="categoria-info">
-                      <span className="categoria-icono">
-                        {categoria.icono}
-                      </span>
+                      <span className="categoria-icono">{categoria.icono}</span>
                       <div>
                         <h3 className="categoria-nombre">{categoria.nombre}</h3>
                         <p className="categoria-descripcion">{categoria.descripcion}</p>
@@ -361,19 +365,16 @@ function ForYouPage() {
                       <span className="lugares-count">
                         {lugaresPorCategoria[categoria.id]?.length || 0} lugares
                       </span>
-                      <span className={`toggle-icon ${categoriaExpandida === categoria.id ? 'rotated' : ''}`}>
-                        ▼
-                      </span>
+                      <span className={`toggle-icon ${categoriaExpandida === categoria.id ? 'rotated' : ''}`}>▼</span>
                     </div>
                   </div>
 
-                  {/* Lugares de la categoría (expandible) */}
+                  {/* Lugares de la categoría */}
                   <div className={`categoria-lugares-wrapper ${categoriaExpandida === categoria.id ? 'open' : ''}`}>
                     {lugaresPorCategoria[categoria.id] && (
                         <div className="lugares-grid categoria-lugares-grid">
                         {lugaresPorCategoria[categoria.id].map((lugar) => (
                             <div key={lugar.id} className="lugar-card">
-                            {/* Botón de favorito */}
                             <button
                                 className={`favorito-btn ${favoritosIds.has(lugar.id) ? 'is-favorito' : ''}`}
                                 onClick={(e) => {
@@ -392,9 +393,7 @@ function ForYouPage() {
                             
                             <div className="lugar-content">
                                 <h3>{lugar.nombre}</h3>
-                                <p className="lugar-desc">
-                                {lugar.descripcion}
-                                </p>
+                                <p className="lugar-desc">{lugar.descripcion}</p>
                                 <button
                                 className="review-btn"
                                 onClick={() => handleAbrirModalResena(lugar)}
@@ -412,16 +411,61 @@ function ForYouPage() {
             </div>
           )}
         </section>
-
       </main>
       
-      {/* Asistente Virtual */}
-      <div className="asistente-virtual-fijo">
-        <div className="asistente-tooltip">
-          ¿Necesitas ayuda con tu viaje?
+      {/* 1. VENTANA DEL CHAT */}
+      {chatOpen && (
+        <div className="chat-window-fixed">
+          <div className="chat-header">
+            <div className="chat-header-info">
+              <div className="chat-avatar-circle">🤖</div>
+              <div>
+                <span className="chat-title">Asistente Pacha</span>
+                <span className="chat-status">En línea</span>
+              </div>
+            </div>
+            <button className="chat-close-btn" onClick={toggleChat}>×</button>
+          </div>
+
+          <div className="chat-body">
+            {mensajes.map((msg) => (
+              <div key={msg.id} className={`chat-message ${msg.sender === 'user' ? 'message-user' : 'message-bot'}`}>
+                <div className="message-bubble">{msg.text}</div>
+              </div>
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
+
+          <form className="chat-input-area" onSubmit={handleEnviarMensaje}>
+            <input 
+              type="text" 
+              placeholder="Escribe tu duda..." 
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              autoFocus
+            />
+            <button type="submit" className="chat-send-btn">➤</button>
+          </form>
         </div>
-        <button className="asistente-btn">
-          💬
+      )}
+
+      {/* 2. BOTÓN DE ACTIVACIÓN */}
+      <div 
+        className="chatbot-trigger-wrapper"
+        onClick={toggleChat}
+        title="Abrir chat de ayuda"
+      >
+        {!chatOpen && (
+          <div className="chat-tooltip-bubble">
+            ¿Necesitas ayuda con tu viaje?
+          </div>
+        )}
+        <button className={`chatbot-float-btn ${chatOpen ? 'open' : ''}`}>
+          {chatOpen ? (
+            <span style={{fontSize: '24px', fontWeight: 'bold', color: 'white'}}>✕</span>
+          ) : (
+            <span style={{fontSize: '28px'}}>💬</span>
+          )}
         </button>
       </div>
       
@@ -464,19 +508,8 @@ function ForYouPage() {
               </div>
               
               <div className="modal-actions">
-                <button
-                  type="button"
-                  onClick={handleCerrarModalResena}
-                  className="btn-cancel"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="btn-submit"
-                >
-                  Publicar reseña
-                </button>
+                <button type="button" onClick={handleCerrarModalResena} className="btn-cancel">Cancelar</button>
+                <button type="submit" className="btn-submit">Publicar reseña</button>
               </div>
             </form>
           </div>
@@ -489,12 +522,8 @@ function ForYouPage() {
             <div className="footer-logo">
                 <span className="black">Pacha</span><span className="orange">Qutec</span>
             </div>
-            <p>
-            Desarrollo Basado en Plataformas - Universidad Católica San Pablo
-            </p>
-            <p className="copyright">
-            © 2025 Todos los derechos reservados.
-            </p>
+            <p>Desarrollo Basado en Plataformas - Universidad Católica San Pablo</p>
+            <p className="copyright">© 2025 Todos los derechos reservados.</p>
         </div>
       </footer>
     </div>
