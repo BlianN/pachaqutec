@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <string>
 #include "RDFGenerator.hpp"
+#include "WikidataClient.hpp"
 
 using namespace drogon;
 using namespace drogon::orm;
@@ -284,7 +285,9 @@ int main() {
                 );
             })
 
-        // Ruta para obtener lugares de la base de datos
+        // ========================================
+        // ENDPOINT DE LUGARES (ACTUALIZADO con campos Wikidata)
+        // ========================================
         .registerHandler("/lugares",
             [](const HttpRequestPtr& req,
                std::function<void(const HttpResponsePtr&)>&& callback) {
@@ -292,7 +295,10 @@ int main() {
                 auto clientPtr = app().getDbClient("default");
 
                 clientPtr->execSqlAsync(
-                    "SELECT l.id, l.nombre, l.descripcion, l.imagen_url, c.nombre as categoria, l.categoria_id "
+                    "SELECT l.id, l.nombre, l.descripcion, l.imagen_url, c.nombre as categoria, l.categoria_id, "
+                    "l.wikidata_id, l.source, l.latitude, l.longitude, l.address, l.website_url, "
+                    "l.founding_date, l.architectural_style, l.heritage_status, l.wikimedia_image_url, "
+                    "l.nombre_en, l.descripcion_en "
                     "FROM lugares l "
                     "JOIN categorias c ON l.categoria_id = c.id "
                     "ORDER BY l.id",
@@ -309,6 +315,33 @@ int main() {
                             lugar["imagen_url"] = r[i]["imagen_url"].as<std::string>();
                             lugar["categoria"] = r[i]["categoria"].as<std::string>();
                             lugar["categoria_id"] = r[i]["categoria_id"].as<int>();
+                            
+                            // Campos Wikidata (pueden ser null)
+                            if (!r[i]["wikidata_id"].isNull())
+                                lugar["wikidata_id"] = r[i]["wikidata_id"].as<std::string>();
+                            if (!r[i]["source"].isNull())
+                                lugar["source"] = r[i]["source"].as<std::string>();
+                            if (!r[i]["latitude"].isNull())
+                                lugar["latitude"] = r[i]["latitude"].as<double>();
+                            if (!r[i]["longitude"].isNull())
+                                lugar["longitude"] = r[i]["longitude"].as<double>();
+                            if (!r[i]["address"].isNull())
+                                lugar["address"] = r[i]["address"].as<std::string>();
+                            if (!r[i]["website_url"].isNull())
+                                lugar["website_url"] = r[i]["website_url"].as<std::string>();
+                            if (!r[i]["founding_date"].isNull())
+                                lugar["founding_date"] = r[i]["founding_date"].as<std::string>();
+                            if (!r[i]["architectural_style"].isNull())
+                                lugar["architectural_style"] = r[i]["architectural_style"].as<std::string>();
+                            if (!r[i]["heritage_status"].isNull())
+                                lugar["heritage_status"] = r[i]["heritage_status"].as<std::string>();
+                            if (!r[i]["wikimedia_image_url"].isNull())
+                                lugar["wikimedia_image_url"] = r[i]["wikimedia_image_url"].as<std::string>();
+                            if (!r[i]["nombre_en"].isNull())
+                                lugar["nombre_en"] = r[i]["nombre_en"].as<std::string>();
+                            if (!r[i]["descripcion_en"].isNull())
+                                lugar["descripcion_en"] = r[i]["descripcion_en"].as<std::string>();
+                            
                             jsonResponse["lugares"].append(lugar);
                         }
 
@@ -413,7 +446,8 @@ int main() {
                 auto clientPtr = app().getDbClient("default");
 
                 clientPtr->execSqlAsync(
-                    "SELECT f.id as favorito_id, l.id, l.nombre, l.descripcion, l.imagen_url, c.nombre as categoria "
+                    "SELECT f.id as favorito_id, l.id, l.nombre, l.descripcion, l.imagen_url, c.nombre as categoria, "
+                    "l.latitude, l.longitude, l.wikidata_id, l.source "
                     "FROM favoritos f "
                     "JOIN lugares l ON f.lugar_id = l.id "
                     "JOIN categorias c ON l.categoria_id = c.id "
@@ -432,6 +466,16 @@ int main() {
                             favorito["descripcion"] = r[i]["descripcion"].as<std::string>();
                             favorito["imagen_url"] = r[i]["imagen_url"].as<std::string>();
                             favorito["categoria"] = r[i]["categoria"].as<std::string>();
+                            
+                            if (!r[i]["latitude"].isNull())
+                                favorito["latitude"] = r[i]["latitude"].as<double>();
+                            if (!r[i]["longitude"].isNull())
+                                favorito["longitude"] = r[i]["longitude"].as<double>();
+                            if (!r[i]["wikidata_id"].isNull())
+                                favorito["wikidata_id"] = r[i]["wikidata_id"].as<std::string>();
+                            if (!r[i]["source"].isNull())
+                                favorito["source"] = r[i]["source"].as<std::string>();
+                            
                             jsonResponse["favoritos"].append(favorito);
                         }
 
@@ -486,6 +530,7 @@ int main() {
                 );
             },
             {Delete})
+
         // ========================================
         // ENDPOINTS DE RESEÑAS
         // ========================================
@@ -671,7 +716,8 @@ int main() {
                 auto clientPtr = app().getDbClient("default");
 
                 clientPtr->execSqlAsync(
-                    "SELECT id, nombre, descripcion, imagen_url, categoria_id "
+                    "SELECT id, nombre, descripcion, imagen_url, categoria_id, "
+                    "wikidata_id, source, latitude, longitude "
                     "FROM lugares WHERE categoria_id = $1 ORDER BY id",
                     [callback](const drogon::orm::Result &r) {
                         Json::Value jsonResponse;
@@ -685,6 +731,16 @@ int main() {
                             lugar["descripcion"] = r[i]["descripcion"].as<std::string>();
                             lugar["imagen_url"] = r[i]["imagen_url"].as<std::string>();
                             lugar["categoria_id"] = r[i]["categoria_id"].as<int>();
+                            
+                            if (!r[i]["wikidata_id"].isNull())
+                                lugar["wikidata_id"] = r[i]["wikidata_id"].as<std::string>();
+                            if (!r[i]["source"].isNull())
+                                lugar["source"] = r[i]["source"].as<std::string>();
+                            if (!r[i]["latitude"].isNull())
+                                lugar["latitude"] = r[i]["latitude"].as<double>();
+                            if (!r[i]["longitude"].isNull())
+                                lugar["longitude"] = r[i]["longitude"].as<double>();
+                            
                             jsonResponse["lugares"].append(lugar);
                         }
 
@@ -704,6 +760,192 @@ int main() {
             },
             {Get})
 
+        // ========================================
+        // ENDPOINTS WIKIDATA - SINCRONIZACIÓN
+        // ========================================
+
+        // Endpoint para EJECUTAR sincronización con Wikidata
+        .registerHandler("/wikidata/sync",
+            [](const HttpRequestPtr& req,
+               std::function<void(const HttpResponsePtr&)>&& callback) {
+
+                auto clientPtr = app().getDbClient("default");
+
+                LOG_INFO << "Iniciando sincronización manual con Wikidata...";
+
+                try {
+                    auto result = pachaqutec::WikidataClient::syncWithDatabase(clientPtr);
+
+                    Json::Value jsonResponse;
+                    jsonResponse["success"] = result.success;
+                    jsonResponse["places_added"] = result.placesAdded;
+                    jsonResponse["places_updated"] = result.placesUpdated;
+                    jsonResponse["places_skipped"] = result.placesSkipped;
+                    
+                    if (!result.errorMessage.empty()) {
+                        jsonResponse["error"] = result.errorMessage;
+                    }
+
+                    auto resp = HttpResponse::newHttpJsonResponse(jsonResponse);
+                    if (!result.success) {
+                        resp->setStatusCode(k500InternalServerError);
+                    }
+                    callback(resp);
+
+                } catch (const std::exception& e) {
+                    Json::Value jsonError;
+                    jsonError["success"] = false;
+                    jsonError["error"] = e.what();
+
+                    auto resp = HttpResponse::newHttpJsonResponse(jsonError);
+                    resp->setStatusCode(k500InternalServerError);
+                    callback(resp);
+                }
+            },
+            {Post})
+
+        // Endpoint para VER historial de sincronizaciones
+        .registerHandler("/wikidata/sync/history",
+            [](const HttpRequestPtr& req,
+               std::function<void(const HttpResponsePtr&)>&& callback) {
+
+                auto clientPtr = app().getDbClient("default");
+
+                clientPtr->execSqlAsync(
+                    "SELECT id, sync_type, started_at, finished_at, status, "
+                    "places_added, places_updated, places_skipped, error_message "
+                    "FROM wikidata_sync_log "
+                    "ORDER BY started_at DESC "
+                    "LIMIT 20",
+                    [callback](const drogon::orm::Result &r) {
+                        Json::Value jsonResponse;
+                        jsonResponse["success"] = true;
+                        jsonResponse["count"] = (int)r.size();
+
+                        for (size_t i = 0; i < r.size(); ++i) {
+                            Json::Value sync;
+                            sync["id"] = r[i]["id"].as<int>();
+                            sync["sync_type"] = r[i]["sync_type"].as<std::string>();
+                            sync["started_at"] = r[i]["started_at"].as<std::string>();
+                            
+                            if (!r[i]["finished_at"].isNull())
+                                sync["finished_at"] = r[i]["finished_at"].as<std::string>();
+                            
+                            sync["status"] = r[i]["status"].as<std::string>();
+                            sync["places_added"] = r[i]["places_added"].as<int>();
+                            sync["places_updated"] = r[i]["places_updated"].as<int>();
+                            sync["places_skipped"] = r[i]["places_skipped"].as<int>();
+                            
+                            if (!r[i]["error_message"].isNull())
+                                sync["error_message"] = r[i]["error_message"].as<std::string>();
+                            
+                            jsonResponse["history"].append(sync);
+                        }
+
+                        auto resp = HttpResponse::newHttpJsonResponse(jsonResponse);
+                        callback(resp);
+                    },
+                    [callback](const drogon::orm::DrogonDbException &e) {
+                        Json::Value jsonError;
+                        jsonError["success"] = false;
+                        jsonError["error"] = e.base().what();
+                        auto resp = HttpResponse::newHttpJsonResponse(jsonError);
+                        resp->setStatusCode(k500InternalServerError);
+                        callback(resp);
+                    }
+                );
+            },
+            {Get})
+
+        // Endpoint para OBTENER lugares de Wikidata (solo preview, sin guardar)
+        .registerHandler("/wikidata/preview",
+            [](const HttpRequestPtr& req,
+               std::function<void(const HttpResponsePtr&)>&& callback) {
+
+                LOG_INFO << "Obteniendo preview de lugares Wikidata...";
+
+                try {
+                    auto places = pachaqutec::WikidataClient::fetchArequipaPlaces();
+
+                    Json::Value jsonResponse;
+                    jsonResponse["success"] = true;
+                    jsonResponse["count"] = (int)places.size();
+
+                    for (const auto& place : places) {
+                        Json::Value placeJson;
+                        placeJson["qid"] = place.qid;
+                        placeJson["name"] = place.name;
+                        placeJson["name_en"] = place.nameEn;
+                        placeJson["description"] = place.description;
+                        placeJson["type_qid"] = place.typeQid;
+                        placeJson["type_label"] = place.typeLabel;
+                        placeJson["latitude"] = place.latitude;
+                        placeJson["longitude"] = place.longitude;
+                        placeJson["image_url"] = place.imageUrl;
+                        placeJson["founding_date"] = place.foundingDate;
+                        placeJson["architectural_style"] = place.architecturalStyle;
+                        placeJson["heritage_status"] = place.heritageStatus;
+                        placeJson["website_url"] = place.websiteUrl;
+                        jsonResponse["places"].append(placeJson);
+                    }
+
+                    auto resp = HttpResponse::newHttpJsonResponse(jsonResponse);
+                    callback(resp);
+
+                } catch (const std::exception& e) {
+                    Json::Value jsonError;
+                    jsonError["success"] = false;
+                    jsonError["error"] = e.what();
+
+                    auto resp = HttpResponse::newHttpJsonResponse(jsonError);
+                    resp->setStatusCode(k500InternalServerError);
+                    callback(resp);
+                }
+            },
+            {Get})
+
+        // Endpoint para ver mapeo de categorías Wikidata
+        .registerHandler("/wikidata/categories",
+            [](const HttpRequestPtr& req,
+               std::function<void(const HttpResponsePtr&)>&& callback) {
+
+                auto clientPtr = app().getDbClient("default");
+
+                clientPtr->execSqlAsync(
+                    "SELECT wcm.id, wcm.wikidata_qid, wcm.wikidata_label, "
+                    "wcm.categoria_id, c.nombre as categoria_nombre "
+                    "FROM wikidata_category_mapping wcm "
+                    "JOIN categorias c ON wcm.categoria_id = c.id "
+                    "ORDER BY c.id, wcm.wikidata_label",
+                    [callback](const drogon::orm::Result &r) {
+                        Json::Value jsonResponse;
+                        jsonResponse["success"] = true;
+                        jsonResponse["count"] = (int)r.size();
+
+                        for (size_t i = 0; i < r.size(); ++i) {
+                            Json::Value mapping;
+                            mapping["id"] = r[i]["id"].as<int>();
+                            mapping["wikidata_qid"] = r[i]["wikidata_qid"].as<std::string>();
+                            mapping["wikidata_label"] = r[i]["wikidata_label"].as<std::string>();
+                            mapping["categoria_id"] = r[i]["categoria_id"].as<int>();
+                            mapping["categoria_nombre"] = r[i]["categoria_nombre"].as<std::string>();
+                            jsonResponse["mappings"].append(mapping);
+                        }
+
+                        auto resp = HttpResponse::newHttpJsonResponse(jsonResponse);
+                        callback(resp);
+                    },
+                    [callback](const drogon::orm::DrogonDbException &e) {
+                        Json::Value jsonError;
+                        jsonError["success"] = false;
+                        jsonError["error"] = e.base().what();
+                        auto resp = HttpResponse::newHttpJsonResponse(jsonError);
+                        resp->setStatusCode(k500InternalServerError);
+                        callback(resp);
+                    }
+                );
+            },
+            {Get})
 
         // ========================================
         // ENDPOINTS RDF - WEB SEMÁNTICA

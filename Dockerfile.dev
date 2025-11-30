@@ -1,0 +1,53 @@
+# ============================================================
+# DOCKERFILE - DESARROLLO CON SOPORTE WIKIDATA
+# ============================================================
+
+FROM ubuntu:22.04 AS builder
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Dependencias base + libcurl para peticiones HTTP a Wikidata
+RUN apt-get update && apt-get install -y \
+    git \
+    gcc \
+    g++ \
+    cmake \
+    libjsoncpp-dev \
+    uuid-dev \
+    zlib1g-dev \
+    openssl \
+    libssl-dev \
+    postgresql-server-dev-all \
+    libpq-dev \
+    curl \
+    libcurl4-openssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Instalar Drogon Framework
+RUN git clone https://github.com/drogonframework/drogon /tmp/drogon && \
+    cd /tmp/drogon && \
+    git submodule update --init && \
+    mkdir build && \
+    cd build && \
+    cmake .. && \
+    make -j$(nproc) && \
+    make install && \
+    ldconfig && \
+    rm -rf /tmp/drogon
+
+WORKDIR /app
+
+# Copiar archivos del proyecto
+COPY CMakeLists.txt .
+COPY src/ ./src/
+COPY rdf/ ./rdf/
+
+# Compilar
+RUN mkdir build && \
+    cd build && \
+    cmake .. && \
+    make -j$(nproc)
+
+EXPOSE 8080
+
+CMD ["./build/mi_aplicacion"]

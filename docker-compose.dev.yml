@@ -1,0 +1,77 @@
+
+# ============================================================
+# DOCKER COMPOSE - DESARROLLO LOCAL CON WIKIDATA
+# Usar: docker-compose -f docker-compose.dev.yml up -d --build
+# ============================================================
+
+services:
+  # PostgreSQL con PostGIS para coordenadas
+  postgres:
+    image: postgis/postgis:15-3.3
+    container_name: pachaqutec-postgres-dev
+    environment:
+      POSTGRES_USER: miusuario
+      POSTGRES_PASSWORD: mipassword
+      POSTGRES_DB: mi_base_datos
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+      - ./init-wikidata.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - pachaqutec-network-dev
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U miusuario -d mi_base_datos"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Backend Drogon (C++)
+  backend:
+    build: 
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: pachaqutec-backend-dev
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: mi_base_datos
+      DB_USER: miusuario
+      DB_PASSWORD: mipassword
+      # Variables para desarrollo
+      ENVIRONMENT: development
+      LOG_LEVEL: debug
+    volumes:
+      # Montar código fuente para desarrollo rápido (opcional)
+      - ./src:/app/src:ro
+      - ./rdf:/app/rdf:ro
+    networks:
+      - pachaqutec-network-dev
+    restart: unless-stopped
+
+  # pgAdmin para administrar la base de datos (opcional pero útil)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pachaqutec-pgadmin-dev
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@pachaqutec.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - pachaqutec-network-dev
+    restart: unless-stopped
+
+networks:
+  pachaqutec-network-dev:
+    driver: bridge
+
+volumes:
+  postgres_data_dev:
