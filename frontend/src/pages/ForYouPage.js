@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { obtenerUsuarios, obtenerLugares, obtenerFavoritos, agregarFavorito, eliminarFavorito, obtenerResenas, crearResena, obtenerCategorias, obtenerLugaresPorCategoria } from "../services/api";
+import Chatbot from "./Chatbot";
 import "./ForYouPage.css";
 
 function ForYouPage() {
@@ -35,15 +36,6 @@ function ForYouPage() {
   const [loadingCategorias, setLoadingCategorias] = useState(true);
   const [categoriaExpandida, setCategoriaExpandida] = useState(null);
   const [lugaresPorCategoria, setLugaresPorCategoria] = useState({});
-
-  // --- NUEVOS ESTADOS PARA EL CHATBOT ---
-  const [chatOpen, setChatOpen] = useState(false);
-  const [mensajes, setMensajes] = useState([
-    { id: 1, text: "¡Hola viajero! 🏔️ Soy PachaBot. ¿Buscas algún destino en especial?", sender: 'bot' }
-  ]);
-  const [inputText, setInputText] = useState("");
-  const messagesEndRef = useRef(null);
-  // -------------------------------------
 
   // --- TU LÓGICA DE CARGA (INTACTA) ---
   const cargarFavoritos = useCallback(async () => {
@@ -167,14 +159,7 @@ function ForYouPage() {
     cargarCategorias();
   }, [cargarCategorias]);
 
-  // --- EFECTO PARA SCROLL DEL CHAT ---
-  useEffect(() => {
-    if (chatOpen && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [mensajes, chatOpen]);
-
-  // --- HANDLERS EXISTENTES ---
+  // --- HANDLERS ---
   const handleLogout = () => {
     localStorage.removeItem("usuario");
     localStorage.removeItem("recordarSesion");
@@ -250,47 +235,27 @@ function ForYouPage() {
     }
   };
 
-  // --- HANDLERS DEL CHATBOT ---
-  const toggleChat = () => {
-    console.log("Chat toggleado. Estado nuevo:", !chatOpen);
-    setChatOpen(!chatOpen);
-  };
-
-  const handleEnviarMensaje = (e) => {
-    e.preventDefault();
-    if (!inputText.trim()) return;
-
-    const nuevoMsg = { id: Date.now(), text: inputText, sender: 'user' };
-    setMensajes(prev => [...prev, nuevoMsg]);
-    setInputText("");
-
-    // Respuesta simulada
-    setTimeout(() => {
-      const respuestas = [
-        "¡Qué interesante! Arequipa tiene mucho que ofrecer.",
-        "Estoy buscando esa información en mi base de datos...",
-        "Te recomiendo visitar el Cañón del Colca, es impresionante."
-      ];
-      const randomResp = respuestas[Math.floor(Math.random() * respuestas.length)];
-      
-      setMensajes(prev => [...prev, { 
-        id: Date.now() + 1, 
-        text: randomResp, 
-        sender: 'bot' 
-      }]);
-    }, 1000);
-  };
-
   return (
     <div className="foryou-container">
-      {/* Header con navegación */}
       <header className="foryou-header">
-        <div className="logo">
-          <div className="mountain"></div>
-          <h1>
-            <span className="black">Pacha</span>
-            <span className="orange">Qutec</span>
-          </h1>
+        <div className="header-top">
+          <div className="logo">
+            <div className="mountain"></div>
+            <h1>
+              <span className="black">Pacha</span>
+              <span className="orange">Qutec</span>
+            </h1>
+          </div>
+
+          <div className="header-actions">
+            {usuarioLogueado && (
+              <span className="user-welcome">
+                Hola, <strong>{usuarioLogueado.nombre}</strong>
+              </span>
+            )}
+            <button onClick={() => navigate("/rdf")} className="nav-link nav-rdf" title="Ver datos en formato RDF">🌐 RDF</button>
+            <button onClick={handleLogout} className="nav-link logout-btn">Salir</button>
+          </div>
         </div>
 
         <nav className="navigation">
@@ -300,13 +265,6 @@ function ForYouPage() {
           <button onClick={() => navigate("/rutas")} className="nav-link" title="Ver mapa de rutas">Rutas</button>
           <button onClick={() => navigate("/reseñas")} className="nav-link">Reseñas</button>
           <button onClick={() => navigate("/contactanos")} className="nav-link">Contáctanos</button>
-          {usuarioLogueado && (
-            <span className="user-welcome">
-              Hola, <strong>{usuarioLogueado.nombre}</strong>
-            </span>
-          )}
-          <button onClick={() => navigate("/rdf")} className="nav-link nav-rdf" title="Ver datos en formato RDF">🌐 RDF</button>
-          <button onClick={handleLogout} className="nav-link logout-btn">Salir</button>
         </nav>
       </header>
 
@@ -413,92 +371,32 @@ function ForYouPage() {
         </section>
       </main>
       
-      {/* 1. VENTANA DEL CHAT */}
-      {chatOpen && (
-        <div className="chat-window-fixed">
-          <div className="chat-header">
-            <div className="chat-header-info">
-              <div className="chat-avatar-circle">🤖</div>
-              <div>
-                <span className="chat-title">Asistente Pacha</span>
-                <span className="chat-status">En línea</span>
-              </div>
-            </div>
-            <button className="chat-close-btn" onClick={toggleChat}>×</button>
-          </div>
-
-          <div className="chat-body">
-            {mensajes.map((msg) => (
-              <div key={msg.id} className={`chat-message ${msg.sender === 'user' ? 'message-user' : 'message-bot'}`}>
-                <div className="message-bubble">{msg.text}</div>
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
-
-          <form className="chat-input-area" onSubmit={handleEnviarMensaje}>
-            <input 
-              type="text" 
-              placeholder="Escribe tu duda..." 
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              autoFocus
-            />
-            <button type="submit" className="chat-send-btn">➤</button>
-          </form>
-        </div>
-      )}
-
-      {/* 2. BOTÓN DE ACTIVACIÓN */}
-      <div 
-        className="chatbot-trigger-wrapper"
-        onClick={toggleChat}
-        title="Abrir chat de ayuda"
-      >
-        {!chatOpen && (
-          <div className="chat-tooltip-bubble">
-            ¿Necesitas ayuda con tu viaje?
-          </div>
-        )}
-        <button className={`chatbot-float-btn ${chatOpen ? 'open' : ''}`}>
-          {chatOpen ? (
-            <span style={{fontSize: '24px', fontWeight: 'bold', color: 'white'}}>✕</span>
-          ) : (
-            <span style={{fontSize: '28px'}}>💬</span>
-          )}
-        </button>
-      </div>
+      {/* Chatbot */}
+      <Chatbot />
       
       {/* Modal para crear reseña */}
       {mostrarModalResena && (
         <div className="modal-overlay" onClick={handleCerrarModalResena}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-                <h2>✍️ Nueva Reseña</h2>
-                <button className="modal-close" onClick={handleCerrarModalResena}>&times;</button>
-            </div>
-            
-            <p className="modal-subtitle">Cuéntanos tu experiencia en <strong>{lugarSeleccionado?.nombre}</strong></p>
-            
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2>Escribir reseña para {lugarSeleccionado?.nombre}</h2>
             <form onSubmit={handleCrearResena}>
               <div className="form-group">
-                <label>Calificación</label>
-                <div className="star-rating">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <span
-                      key={star}
-                      onClick={() => setNuevaResena({...nuevaResena, calificacion: star})}
-                      className={star <= nuevaResena.calificacion ? 'star filled' : 'star'}
-                    >
-                      ★
-                    </span>
-                  ))}
-                </div>
+                <label>Calificación:</label>
+                <select 
+                  value={nuevaResena.calificacion} 
+                  onChange={(e) => setNuevaResena({...nuevaResena, calificacion: parseInt(e.target.value)})}
+                >
+                  <option value={5}>⭐⭐⭐⭐⭐ Excelente</option>
+                  <option value={4}>⭐⭐⭐⭐ Muy bueno</option>
+                  <option value={3}>⭐⭐⭐ Bueno</option>
+                  <option value={2}>⭐⭐ Regular</option>
+                  <option value={1}>⭐ Malo</option>
+                </select>
               </div>
               
               <div className="form-group">
-                <label>Tu opinión</label>
-                <textarea
+                <label>Tu reseña:</label>
+                <textarea 
                   value={nuevaResena.texto}
                   onChange={(e) => setNuevaResena({...nuevaResena, texto: e.target.value})}
                   placeholder="¿Qué fue lo que más te gustó? ¿Qué se podría mejorar?"
