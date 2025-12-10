@@ -51,35 +51,35 @@ CREATE TABLE IF NOT EXISTS lugares (
 INSERT INTO lugares (nombre, descripcion, imagen_url, categoria_id) VALUES
     -- Categoría: Histórico (1)
     ('Monasterio de Santa Catalina', 'Ciudadela religiosa del siglo XVI, considerada una ciudad dentro de la ciudad con calles coloridas y arquitectura colonial.', 'https://www.peru.travel/Contenido/General/Imagen/es/564/1.1/santa-catalina.jpg', 1),
-    ('Plaza de Armas', 'Corazón de la ciudad blanca, rodeada de portales coloniales, la catedral basílica y el Portal del Cabildo.', 'https://media.istockphoto.com/id/809109190/es/foto/catedral-en-plaza-de-armas-arequipa-per%C3%BA.jpg', 1),
+    ('Plaza de Armas', 'Corazón de la ciudad blanca, rodeada de portales coloniales, la catedral basílica y el Portal del Cabildo.', 'https://upload.wikimedia.org/wikipedia/commons/6/65/Arequipac.jpg', 1),
     ('Barrio de San Lázaro', 'El barrio más antiguo de Arequipa con callejuelas estrechas, casas de sillar blanco y miradores pintorescos.', 'https://www.amarujourneyperu.com/blog/wp-content/uploads/lazaro1.webp', 1),
-    ('Casa del Moral', 'Casona colonial del siglo XVIII con fachada barroca y patio interior de estilo churrigueresco.', 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0f/d5/e0/3c/casa-del-moral.jpg', 1),
+    ('Casa del Moral', 'Casona colonial del siglo XVIII con fachada barroca y patio interior de estilo churrigueresco.', 'https://media.tacdn.com/media/attractions-splice-spp-674x446/06/6e/dc/b9.jpg', 1),
     
     -- Categoría: Naturaleza (2)
     ('Cañón del Colca', 'Uno de los cañones más profundos del mundo, hogar del majestuoso cóndor andino y paisajes espectaculares.', 'https://www.peru.travel/Contenido/Atractivo/Imagen/es/8/1.2/Principal/Ca%C3%B1on%20del%20Colca.jpg', 2),
     ('Volcán Misti', 'Icónico volcán de 5,822 metros que domina el skyline de Arequipa, ideal para trekking y montañismo.', 'https://media-cdn.tripadvisor.com/media/photo-s/13/72/f9/f4/vista-de-volcan-misti.jpg', 2),
-    ('Valle de los Volcanes', 'Paisaje lunar con más de 80 conos volcánicos, considerado un laboratorio natural de vulcanología.', 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Valle_de_los_Volcanes_-_Andagua.jpg/1200px-Valle_de_los_Volcanes_-_Andagua.jpg', 2),
-    ('Reserva Nacional Salinas y Aguada Blanca', 'Hogar de vicuñas, alpacas y flamencos andinos en un paisaje de puna con lagunas cristalinas.', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRXyZ5X8qQHQmQZFHqZQmVJYQqZqYQHqQZQmQ&s', 2),
+    ('Valle de los Volcanes', 'Paisaje lunar con más de 80 conos volcánicos, considerado un laboratorio natural de vulcanología.', 'https://www.raptravelperu.com/wp-content/uploads/portada-volcanes.webp', 2),
+    ('Reserva Nacional Salinas y Aguada Blanca', 'Hogar de vicuñas, alpacas y flamencos andinos en un paisaje de puna con lagunas cristalinas.', 'https://consultasenlinea.mincetur.gob.pe/fichaInventario/foto.aspx?cod=526875', 2),
     
     -- Categoría: Gastronomía (3)
     ('Picanterías Tradicionales', 'Restaurantes familiares donde se sirven platos típicos como rocoto relleno, adobo y chupe de camarones.', 'https://larepublica.cronosmedia.glr.pe/migration/images/KKMCLVFVQ5GOXHOTEFU56J4H44.jpg', 3),
-    ('Mercado San Camilo', 'Mercado tradicional con productos locales, jugos de frutas exóticas y comida callejera auténtica.', 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0f/9c/8d/3e/mercado-san-camilo.jpg', 3),
-    ('Ruta del Queso Helado', 'Recorrido por las heladerías tradicionales que preparan el famoso queso helado arequipeño.', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQqZ5X8qQHQmQZQHqZQmVJYQqZqYQHqQZQmQ&s', 3),
+    ('Mercado San Camilo', 'Mercado tradicional con productos locales, jugos de frutas exóticas y comida callejera auténtica.', 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/2e/75/4b/55/caption.jpg?w=900&h=-1&s=1', 3),
+    ('Ruta del Queso Helado', 'Recorrido por las heladerías tradicionales que preparan el famoso queso helado arequipeño.', 'https://www.rumbosdelperu.com/wp-content/uploads/2023/10/queso-helado-_04.jpg', 3),
     
     -- Categoría: Cultural (4)
-    ('Museo Santuarios Andinos', 'Hogar de la momia Juanita, la doncella de hielo encontrada en el volcán Ampato.', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSrQYKRt7pE8KITR1yR-efcetaNowyhX2sB9Q&s', 4),
-    ('Casa Museo Mario Vargas Llosa', 'Casa natal del Premio Nobel de Literatura, convertida en museo interactivo sobre su vida y obra.', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQHqQZQmQZQHqZQmVJYQqZqYQHqQZQmQ&s', 4),
-    ('Mirador de Yanahuara', 'Mirador con arcos de sillar que ofrecen vistas panorámicas de la ciudad y los volcanes.', 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0f/2c/85/82/mirador-de-yanahuara.jpg', 4),
+    ('Museo Santuarios Andinos', 'Hogar de la momia Juanita, la doncella de hielo encontrada en el volcán Ampato.', 'https://i0.wp.com/machupicchusacred.com/wp-content/uploads/2025/03/Ubicacion-Horarios-y-Tarifas-del-Museo-Santuario-Andino.jpg?fit=1900%2C800&ssl=1', 4),
+    ('Casa Museo Mario Vargas Llosa', 'Casa natal del Premio Nobel de Literatura, convertida en museo interactivo sobre su vida y obra.', 'https://itinari-images.s3.eu-west-1.amazonaws.com/activity/images/original/83f6b7ed-727d-459d-b6d4-8b552947b06d-15974941_381778488850388_2542505315389018686_o.png', 4),
+    ('Mirador de Yanahuara', 'Mirador con arcos de sillar que ofrecen vistas panorámicas de la ciudad y los volcanes.', 'https://www.peru.travel/Contenido/Atractivo/Imagen/es/42/1.1/Principal/mirador-yanahuara.jpg', 4),
     
     -- Categoría: Religioso (5)
-    ('Catedral de Arequipa', 'Imponente templo neoclásico que ocupa todo un lado de la Plaza de Armas.', 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Catedral_de_Arequipa.jpg/1200px-Catedral_de_Arequipa.jpg', 5),
-    ('Iglesia de la Compañía', 'Templo jesuita con impresionante fachada barroca mestiza y claustros coloniales.', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQHqZQmQZQHqZQmVJYQqZqYQHqQZQmQ&s', 5),
-    ('Convento de Santa Teresa', 'Convento de clausura del siglo XVII que ahora funciona como museo de arte colonial.', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQmQZQHqZQmVJYQqZqYQHqQZQmQ&s', 5),
+    ('Catedral de Arequipa', 'Imponente templo neoclásico que ocupa todo un lado de la Plaza de Armas.', 'https://upload.wikimedia.org/wikipedia/commons/b/b3/Catedral_de_Arequipa.jpg', 5),
+    ('Iglesia de la Compañía', 'Templo jesuita con impresionante fachada barroca mestiza y claustros coloniales.', 'https://upload.wikimedia.org/wikipedia/commons/3/30/Iglesia_de_la_Compa%C3%B1%C3%ADa%2C_Arequipa.jpg', 5),
+    ('Convento de Santa Teresa', 'Convento de clausura del siglo XVII que ahora funciona como museo de arte colonial.', 'https://www.peru.travel/Contenido/General/Imagen/es/762/1.1/santa-teresa-convento.jpg', 5),
     
     -- Categoría: Aventura (6)
-    ('Rafting en río Chili', 'Descenso de rápidos en el río que atraviesa la ciudad, apto para principiantes y expertos.', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQZQHqZQmVJYQqZqYQHqQZQmQ&s', 6),
-    ('Trekking a Chachani', 'Ascenso al volcán Chachani (6,075m), uno de los seismiles más accesibles del mundo.', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQHqZQmVJYQqZqYQHqQZQmQ&s', 6),
-    ('Canopy y Tirolesa', 'Circuito de tirolesas en el Valle del Colca con vistas espectaculares del cañón.', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQmQZQHqZQmVJYQqZqYQHqQZQmQ&s', 6)
+    ('Rafting en río Chili', 'Descenso de rápidos en el río que atraviesa la ciudad, apto para principiantes y expertos.', 'https://skyperu.com/wp-content/uploads/2021/10/4-13.jpg', 6),
+    ('Trekking a Chachani', 'Ascenso al volcán Chachani (6,075m), uno de los seismiles más accesibles del mundo.', 'https://skyperu.com/wp-content/uploads/2021/10/5-5.jpg', 6),
+    ('Canopy y Tirolesa', 'Circuito de tirolesas en el Valle del Colca con vistas espectaculares del cañón.', 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0f/e1/87/7a/experience-the-extreme.jpg?w=1200&h=-1&s=1', 6)
 ON CONFLICT DO NOTHING;
 
 -- Tabla para favoritos
