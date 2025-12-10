@@ -5,6 +5,7 @@ import {
   obtenerFavoritos,
   obtenerResenas
 } from "../services/api"; 
+import Chatbot from "./Chatbot"; // ← CHATBOT DE DIEGO (CONECTA CON GEMINI)
 import "./ForYouPage.css";
 
 const POSTS_INICIALES = [
@@ -57,23 +58,17 @@ const POSTS_INICIALES = [
 function ForYouPage() {
   const navigate = useNavigate();
   const [usuarioLogueado, setUsuarioLogueado] = useState(null);
-  const [posts, setPosts] = useState([]); // Iniciamos vacío para cargar procesado
+  const [posts, setPosts] = useState([]);
   
   const [comentarioInputs, setComentarioInputs] = useState({});
   const [mostrarComentarios, setMostrarComentarios] = useState({});
   const [menuAbiertoId, setMenuAbiertoId] = useState(null);
-  
-  const [chatOpen, setChatOpen] = useState(false);
-  const [mensajes, setMensajes] = useState([{ id: 1, text: "¡Hola viajero! 🏔️ Soy PachaBot. ¿En qué puedo ayudarte hoy?", sender: 'bot' }]);
-  const [inputText, setInputText] = useState("");
-  const messagesEndRef = useRef(null);
   
   const [solicitudes, setSolicitudes] = useState([]);
   const [showInbox, setShowInbox] = useState(false);
   const [usuariosMap, setUsuariosMap] = useState({});
 
   // --- HELPER: FUSIONAR CON LOCALSTORAGE ---
-  // Esta función recupera likes y comentarios guardados y se los aplica a los posts frescos
   const mergeWithLocalData = (listaPosts) => {
       const savedData = JSON.parse(localStorage.getItem("pacha_feed_interactions")) || {};
       return listaPosts.map(p => {
@@ -81,10 +76,8 @@ function ForYouPage() {
           if (!saved) return p;
           return {
               ...p,
-              // Si hay un like guardado, úsalo; si no, usa el original
               likedByMe: saved.likedByMe !== undefined ? saved.likedByMe : p.likedByMe,
               likes: saved.likes !== undefined ? saved.likes : p.likes,
-              // Si hay comentarios nuevos guardados, añádelos a los existentes
               comentarios: saved.newComments ? [...p.comentarios, ...saved.newComments] : p.comentarios
           };
       });
@@ -116,26 +109,19 @@ function ForYouPage() {
                   fecha: r.created_at ? new Date(r.created_at).toLocaleDateString() : "Reciente",
                   comentarios: []
               }));
-              // Unimos reseñas + posts fijos
               todosLosPosts = [...misPosts, ...POSTS_INICIALES];
            }
         } catch (error) {
            console.error("Error al cargar reseñas:", error);
         }
 
-        // APLICAMOS LA PERSISTENCIA (LIKES Y COMENTARIOS GUARDADOS)
         setPosts(mergeWithLocalData(todosLosPosts));
       };
       cargarFeed();
     } else {
-        // Si no hay usuario, solo mostramos los iniciales con datos guardados
         setPosts(mergeWithLocalData(POSTS_INICIALES));
     }
   }, []);
-
-  useEffect(() => {
-    if (chatOpen && messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-  }, [mensajes, chatOpen]);
 
   const cargarSolicitudes = async (miId) => {
     try {
@@ -166,10 +152,10 @@ function ForYouPage() {
                 
                 // Guardar en LocalStorage
                 const savedData = JSON.parse(localStorage.getItem("pacha_feed_interactions")) || {};
-                savedData[postId] = {
-                    ...(savedData[postId] || {}),
-                    likedByMe: newLikedState,
-                    likes: newLikes
+                savedData[postId] = { 
+                    ...savedData[postId], 
+                    likedByMe: newLikedState, 
+                    likes: newLikes 
                 };
                 localStorage.setItem("pacha_feed_interactions", JSON.stringify(savedData));
 
@@ -185,36 +171,36 @@ function ForYouPage() {
     setMostrarComentarios(prev => ({ ...prev, [postId]: !prev[postId] }));
   };
 
-  // --- COMENTARIOS CON PERSISTENCIA ---
   const handlePostComentario = (postId) => {
     const texto = comentarioInputs[postId];
-    if (!texto || !texto.trim()) return;
+    if (!texto || !texto.trim() || !usuarioLogueado) return;
     
-    const nuevoComentario = { user: usuarioLogueado ? usuarioLogueado.nombre : "Yo", text: texto };
+    const nuevoComentario = { user: usuarioLogueado.nombre, text: texto.trim() };
+
+    setPosts(prevPosts => prevPosts.map(post => {
+        if (post.id === postId) {
+            const nuevosComentarios = [...post.comentarios, nuevoComentario];
+            
+            // Guardar en LocalStorage
+            const savedData = JSON.parse(localStorage.getItem("pacha_feed_interactions")) || {};
+            const existingNew = savedData[postId]?.newComments || [];
+            savedData[postId] = { 
+                ...savedData[postId], 
+                newComments: [...existingNew, nuevoComentario] 
+            };
+            localStorage.setItem("pacha_feed_interactions", JSON.stringify(savedData));
+            
+            return { ...post, comentarios: nuevosComentarios };
+        }
+        return post;
+    }));
     
-    setPosts(prevPosts => {
-        const updatedPosts = prevPosts.map(p => {
-            if (p.id === postId) {
-                // Guardar en LocalStorage
-                const savedData = JSON.parse(localStorage.getItem("pacha_feed_interactions")) || {};
-                const postData = savedData[postId] || {};
-                const newComments = [...(postData.newComments || []), nuevoComentario];
-                
-                savedData[postId] = { ...postData, newComments };
-                localStorage.setItem("pacha_feed_interactions", JSON.stringify(savedData));
-
-                return { ...p, comentarios: [...p.comentarios, nuevoComentario] };
-            }
-            return p;
-        });
-        return updatedPosts;
-    });
-
-    setComentarioInputs(prev => ({ ...prev, [postId]: "" }));
-    setMostrarComentarios(prev => ({ ...prev, [postId]: true }));
+    setComentarioInputs({ ...comentarioInputs, [postId]: "" });
   };
 
-  const toggleMenu = (postId) => setMenuAbiertoId(menuAbiertoId === postId ? null : postId);
+  const toggleMenu = (postId) => {
+    setMenuAbiertoId(menuAbiertoId === postId ? null : postId);
+  };
 
   const responderSolicitud = (id, aceptar) => {
     const relaciones = JSON.parse(localStorage.getItem("pacha_relaciones")) || [];
@@ -227,14 +213,6 @@ function ForYouPage() {
         alert("¡Nuevo amigo agregado!");
     }
     setSolicitudes(prev => prev.filter(s => s.id !== id));
-  };
-
-  const handleChatSubmit = (e) => {
-    e.preventDefault();
-    if (!inputText.trim()) return;
-    setMensajes(prev => [...prev, { id: Date.now(), text: inputText, sender: 'user' }]);
-    setInputText("");
-    setTimeout(() => setMensajes(prev => [...prev, { id: Date.now()+1, text: "¡Interesante elección! ¿Te gustaría saber precios?", sender: 'bot' }]), 1000);
   };
 
   return (
@@ -324,6 +302,7 @@ function ForYouPage() {
         ))}
       </main>
 
+      {/* BANDEJA DE NOTIFICACIONES */}
       <div className="inbox-wrapper">
          <button className={`inbox-btn ${solicitudes.length > 0 ? 'pulse' : ''}`} onClick={() => setShowInbox(!showInbox)} title="Notificaciones">
              <span style={{fontSize: '1.2rem'}}>🔔</span>
@@ -354,31 +333,10 @@ function ForYouPage() {
          )}
       </div>
 
-      <div className="chatbot-wrapper">
-         {!chatOpen && <div className="chat-hint">¿Necesitas ayuda?</div>}
-         <button className={`chat-fab ${chatOpen ? 'open' : ''}`} onClick={() => setChatOpen(!chatOpen)}>
-            {chatOpen ? '✕' : '💬'}
-         </button>
-      </div>
-
-      {chatOpen && (
-        <div className="chat-window">
-             <div className="chat-top">
-                 <div className="chat-brand">🤖 Asistente Pacha</div>
-                 <button className="chat-minimize" onClick={() => setChatOpen(false)}>−</button>
-             </div>
-             <div className="chat-msgs">
-                 {mensajes.map(m => (
-                     <div key={m.id} className={`msg ${m.sender}`}><span>{m.text}</span></div>
-                 ))}
-                 <div ref={messagesEndRef} />
-             </div>
-             <form className="chat-form" onSubmit={handleChatSubmit}>
-                 <input value={inputText} onChange={e => setInputText(e.target.value)} placeholder="Escribe..." autoFocus/>
-                 <button type="submit">Enviar</button>
-             </form>
-        </div>
-      )}
+      {/* ═══════════════════════════════════════════════════════════
+          CHATBOT DE DIEGO - CONECTADO CON MICROSERVICIO PYTHON/GEMINI
+          ═══════════════════════════════════════════════════════════ */}
+      <Chatbot />
     </div>
   );
 }

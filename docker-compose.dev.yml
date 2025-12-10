@@ -71,7 +71,7 @@ services:
       DB_USER: miusuario
       DB_PASSWORD: mipassword
       # API Key de Google Gemini - REEMPLAZA CON TU KEY
-      GEMINI_API_KEY: "AIzaSyCskMI2OdgYJV29HwfBwM1lXRAEaByL4U0"
+      GEMINI_API_KEY: "AIzaSyC-7wcGgiEp9E_P8xbvBrgifH8Xy8eQbow"
     networks:
       - pachaqutec-network-dev
     restart: unless-stopped

@@ -1,4 +1,4 @@
-#codigo de diego
+#codigo de diego - CORREGIDO por Claude (sin PostGIS)
 import os
 import json
 import re
@@ -121,6 +121,17 @@ LUGARES_POR_CATEGORIA = {
     ]
 }
 
+# Diccionario para buscar coordenadas por nombre (normalizado)
+COORDENADAS_LUGARES = {}
+for categoria, lugares in LUGARES_POR_CATEGORIA.items():
+    for lugar in lugares:
+        nombre_normalizado = lugar['nombre'].lower().strip()
+        COORDENADAS_LUGARES[nombre_normalizado] = {
+            'lat': lugar['lat'],
+            'lng': lugar['lng'],
+            'categoria': categoria
+        }
+
 class MensajeRequest(BaseModel):
     mensaje: str
     contexto: dict = None  # Para mantener estado de conversación
@@ -136,18 +147,33 @@ def get_db_connection():
         print(f"Error DB: {e}")
         return None
 
+def obtener_coordenadas_lugar(nombre: str):
+    """Busca coordenadas en el diccionario hardcodeado"""
+    nombre_lower = nombre.lower().strip()
+    
+    # Búsqueda exacta
+    if nombre_lower in COORDENADAS_LUGARES:
+        return COORDENADAS_LUGARES[nombre_lower]
+    
+    # Búsqueda parcial
+    for key, coords in COORDENADAS_LUGARES.items():
+        if nombre_lower in key or key in nombre_lower:
+            return coords
+    
+    return None
+
 def buscar_lugares_db(query: str):
+    """Busca lugares en la BD SIN usar PostGIS"""
     conn = get_db_connection()
     if not conn:
-        return []
+        print("⚠️ No se pudo conectar a la BD, usando datos locales")
+        return buscar_lugares_local(query)
     
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+            # Query CORREGIDO: Sin PostGIS, sin columna ubicacion
             sql = """
-                SELECT l.id, l.nombre, l.descripcion, 
-                       ST_X(l.ubicacion::geometry) as longitud,
-                       ST_Y(l.ubicacion::geometry) as latitud,
-                       c.nombre as categoria
+                SELECT l.id, l.nombre, l.descripcion, c.nombre as categoria
                 FROM lugares l
                 LEFT JOIN categorias c ON l.categoria_id = c.id
                 WHERE LOWER(l.nombre) LIKE LOWER(%s) 
@@ -157,13 +183,44 @@ def buscar_lugares_db(query: str):
             """
             search_term = f'%{query}%'
             cursor.execute(sql, (search_term, search_term, search_term))
-            return cursor.fetchall()
+            resultados = cursor.fetchall()
+            
+            # Agregar coordenadas desde el diccionario hardcodeado
+            for lugar in resultados:
+                coords = obtener_coordenadas_lugar(lugar['nombre'])
+                if coords:
+                    lugar['latitud'] = coords['lat']
+                    lugar['longitud'] = coords['lng']
+                else:
+                    lugar['latitud'] = None
+                    lugar['longitud'] = None
+            
+            return resultados
     except Exception as e:
         print(f"Error SQL: {e}")
-        return []
+        return buscar_lugares_local(query)
     finally:
         if conn:
             conn.close()
+
+def buscar_lugares_local(query: str):
+    """Busca en los datos hardcodeados si la BD falla"""
+    query_lower = query.lower()
+    resultados = []
+    
+    for categoria, lugares in LUGARES_POR_CATEGORIA.items():
+        for lugar in lugares:
+            if query_lower in lugar['nombre'].lower():
+                resultados.append({
+                    'id': len(resultados) + 1,
+                    'nombre': lugar['nombre'],
+                    'descripcion': f'Lugar de categoría {categoria}',
+                    'categoria': categoria,
+                    'latitud': lugar['lat'],
+                    'longitud': lugar['lng']
+                })
+    
+    return resultados[:5]
 
 def extraer_json(texto: str):
     """Función robusta para extraer JSON de respuesta de Gemini"""
@@ -274,7 +331,7 @@ async def chatbot(request: MensajeRequest):
             
             coords = []
             for l in lugares:
-                if l['latitud'] and l['longitud']:
+                if l.get('latitud') and l.get('longitud'):
                     coords.append({
                         "id": l['id'],
                         "nombre": l['nombre'],
@@ -282,10 +339,16 @@ async def chatbot(request: MensajeRequest):
                         "lng": float(l['longitud'])
                     })
             
-            return RutaResponse(
-                respuesta_texto=texto_final,
-                ruta_coordenadas=coords
-            )
+            if coords:
+                return RutaResponse(
+                    respuesta_texto=texto_final,
+                    ruta_coordenadas=coords
+                )
+            else:
+                # Lugares encontrados pero sin coordenadas
+                return RutaResponse(
+                    respuesta_texto=f"Encontré: {', '.join(nombres)}. Sin embargo, no tengo las coordenadas exactas para mostrarlos en el mapa."
+                )
         
         # Charla general
         prompt_sistema = f"""
