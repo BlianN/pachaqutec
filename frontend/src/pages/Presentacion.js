@@ -16,7 +16,7 @@ function Presentacion() {
           <div className="logo">
             <div className="mountain-icon"></div>
             <div className="logo-text">
-              <span className="text-dark">Pacha</span>
+              <span className="text-white">Pacha</span>
               <span className="text-orange">Qutec</span>
             </div>
           </div>

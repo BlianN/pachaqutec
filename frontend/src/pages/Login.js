@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { signInWithPopup } from "firebase/auth";
-import { auth, googleProvider, facebookProvider } from "../config/firebase";
+import { auth, googleProvider } from "../config/firebase"; 
 import { login, registrarUsuario } from "../services/api";
 import "./Login.css";
 
@@ -15,7 +15,6 @@ function Login() {
   const [error, setError] = useState("");
   const [recordarSesion, setRecordarSesion] = useState(false);
 
-  // Verificar si hay sesión guardada al cargar
   useEffect(() => {
     const sesionGuardada = localStorage.getItem("recordarSesion");
     const usuario = localStorage.getItem("usuario");
@@ -91,7 +90,7 @@ function Login() {
       if (registroData.success) {
         localStorage.setItem("usuario", JSON.stringify(registroData.usuario));
         if (recordarSesion) localStorage.setItem("recordarSesion", "true");
-        navigate("/intereses");
+        navigate("/intereses"); // O a foryou si prefieres
       } else {
         setError("Error al registrar con Google");
       }
@@ -100,34 +99,6 @@ function Login() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleFacebookLogin = async () => {
-    setIsLoading(true);
-    setError("");
-    try {
-      const result = await signInWithPopup(auth, facebookProvider);
-      const user = result.user;
-      try {
-        const loginData = await login(user.email, user.uid);
-        if (loginData.success) {
-          localStorage.setItem("usuario", JSON.stringify(loginData.usuario));
-          if (recordarSesion) localStorage.setItem("recordarSesion", "true");
-          navigate("/foryou");
-          return;
-        }
-      } catch (loginErr) { }
-      const registroData = await registrarUsuario(
-        user.displayName || user.email.split('@')[0],
-        user.email,
-        user.uid
-      );
-      if (registroData.success) {
-        localStorage.setItem("usuario", JSON.stringify(registroData.usuario));
-        if (recordarSesion) localStorage.setItem("recordarSesion", "true");
-        navigate("/intereses");
-      } else { setError("Error al registrar con Facebook"); }
-    } catch (err) { setError("Error al iniciar sesión con Facebook"); } finally { setIsLoading(false); }
   };
 
   return (
@@ -142,13 +113,13 @@ function Login() {
 
       <div className="login-content">
         
+        {/* TARJETA DE LOGIN */}
         <div className="login-card">
           <div className="login-header">
-            {/* LOGO ARREGLADO */}
             <div className="logo-container">
               <div className="mountain-icon"></div>
               <h1>
-                <span className="text-dark">Pacha</span>
+                <span className="text-light">Pacha</span>
                 <span className="text-orange">Qutec</span>
               </h1>
             </div>
@@ -218,9 +189,6 @@ function Login() {
             <button className="social-btn google" onClick={handleGoogleLogin} disabled={isLoading}>
               <span className="social-icon">G</span> Google
             </button>
-            <button className="social-btn facebook" onClick={handleFacebookLogin} disabled={isLoading}>
-              <span className="social-icon">f</span> Facebook
-            </button>
           </div>
 
           <div className="login-footer-card">
@@ -229,12 +197,9 @@ function Login() {
               Crear cuenta nueva
             </button>
           </div>
-
-          <div className="credentials-test">
-            <p>💡 <strong>Demo:</strong> juan@ejemplo.com | password123</p>
-          </div>
         </div>
 
+        {/* SECCIÓN DE BIENVENIDA (DERECHA) */}
         <div className="welcome-section">
           <div className="welcome-badge">
             <span>✨ Nuevo en PachaQutec</span>

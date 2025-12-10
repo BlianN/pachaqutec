@@ -1,531 +1,384 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { obtenerUsuarios, obtenerLugares, obtenerFavoritos, agregarFavorito, eliminarFavorito, obtenerResenas, crearResena, obtenerCategorias, obtenerLugaresPorCategoria } from "../services/api";
+import { 
+  obtenerUsuarios, 
+  obtenerFavoritos,
+  obtenerResenas
+} from "../services/api"; 
 import "./ForYouPage.css";
+
+const POSTS_INICIALES = [
+  {
+    id: 1,
+    userId: 101, 
+    usuario: "Tasha de los Backyardigans",
+    avatar: "https://fbi.cults3d.com/uploaders/40342033/illustration-file/277a17de-b4a8-4d39-85a9-89edcfdf3e7e/tasha.png",
+    ubicacion: "Mirador de Yanahuara, Arequipa",
+    imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRJjrQRzZ9J-Z-Bby9PaZ-WsCLzD6wxr99udA&s",
+    descripcion: "Espero que la policia no me reconozca comiendo mi queso helado . 🏔️🍦",
+    likes: 124,
+    likedByMe: false,
+    fecha: "Hace 2 horas",
+    comentarios: [
+      { user: "Pablo Escobar", text: "¡Qué hermosa vista! 😍" },
+      { user: "TurismoPeru", text: "El mejor lugar para fotos." }
+    ]
+  },
+  {
+    id: 2,
+    userId: 102,
+    usuario: "Pablo el explorador",
+    avatar: "https://fbi.cults3d.com/uploaders/40342033/illustration-file/40f7a3d4-3a88-427f-8b4b-70e6c5e02e21/pablo-detective.png",
+    ubicacion: "Cañón del Colca",
+    imagen: "https://www.peru.travel/Contenido/Atractivo/Imagen/es/8/1.2/Principal/Ca%C3%B1on%20del%20Colca.jpg",
+    descripcion: "El vuelo del cóndor es algo que tienes que ver al menos una vez en la vida. Majestuoso. pdta:Casi me lleva, asi que tengan cuidado 🦅",
+    likes: 89,
+    likedByMe: false,
+    fecha: "Hace 5 horas",
+    comentarios: []
+  },
+  {
+    id: 3,
+    userId: 103,
+    usuario: "Ricardo Palma",
+    avatar: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-5xsn7BPM5X9Wyjfs_5cwWJ7-wUJqlbT9oQ&s",
+    ubicacion: "Monasterio de Santa Catalina",
+    imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQT4ZTXV5btAqsuxEX69bAk4YXAKPEfp56h6g&s",
+    descripcion: "Perdiéndome en los colores y las calles de esta ciudad dentro de una ciudad. ❤️💙",
+    likes: 256,
+    likedByMe: true,
+    fecha: "Hace 1 día",
+    comentarios: [
+       { user: "Tasha de los Backyardigans", text: "Esos colores son únicos. me recuerdan a mi" }
+    ]
+  }
+];
 
 function ForYouPage() {
   const navigate = useNavigate();
-
-  // --- ESTADOS EXISTENTES (TU LÓGICA) ---
   const [usuarioLogueado, setUsuarioLogueado] = useState(null);
+  const [posts, setPosts] = useState([]); // Iniciamos vacío para cargar procesado
   
-  // Estado para almacenar lugares del backend
-  const [lugaresBackend, setLugaresBackend] = useState([]);
-  const [loadingLugares, setLoadingLugares] = useState(true);
-  const [errorLugares, setErrorLugares] = useState(null);
-
-  // Estado para almacenar favoritos del backend
-  const [favoritosBackend, setFavoritosBackend] = useState([]);
-  const [loadingFavoritos, setLoadingFavoritos] = useState(false);
-  const [errorFavoritos, setErrorFavoritos] = useState(null);
-  const [favoritosIds, setFavoritosIds] = useState(new Set());
-
-  // Estado para almacenar reseñas del backend
-  const [resenasBackend, setResenasBackend] = useState([]);
-  const [loadingResenas, setLoadingResenas] = useState(false);
-  const [errorResenas, setErrorResenas] = useState(null);
+  const [comentarioInputs, setComentarioInputs] = useState({});
+  const [mostrarComentarios, setMostrarComentarios] = useState({});
+  const [menuAbiertoId, setMenuAbiertoId] = useState(null);
   
-  // Estado para modal de reseña
-  const [mostrarModalResena, setMostrarModalResena] = useState(false);
-  const [lugarSeleccionado, setLugarSeleccionado] = useState(null);
-  const [nuevaResena, setNuevaResena] = useState({ texto: '', calificacion: 5 });
-
-  // Estado para categorías
-  const [categorias, setCategorias] = useState([]);
-  const [loadingCategorias, setLoadingCategorias] = useState(true);
-  const [categoriaExpandida, setCategoriaExpandida] = useState(null);
-  const [lugaresPorCategoria, setLugaresPorCategoria] = useState({});
-
-  // --- NUEVOS ESTADOS PARA EL CHATBOT ---
   const [chatOpen, setChatOpen] = useState(false);
-  const [mensajes, setMensajes] = useState([
-    { id: 1, text: "¡Hola viajero! 🏔️ Soy PachaBot. ¿Buscas algún destino en especial?", sender: 'bot' }
-  ]);
+  const [mensajes, setMensajes] = useState([{ id: 1, text: "¡Hola viajero! 🏔️ Soy PachaBot. ¿En qué puedo ayudarte hoy?", sender: 'bot' }]);
   const [inputText, setInputText] = useState("");
   const messagesEndRef = useRef(null);
-  // -------------------------------------
+  
+  const [solicitudes, setSolicitudes] = useState([]);
+  const [showInbox, setShowInbox] = useState(false);
+  const [usuariosMap, setUsuariosMap] = useState({});
 
-  // --- TU LÓGICA DE CARGA (INTACTA) ---
-  const cargarFavoritos = useCallback(async () => {
-    if (!usuarioLogueado) return;
-    try {
-      setLoadingFavoritos(true);
-      setErrorFavoritos(null);
-      const data = await obtenerFavoritos(usuarioLogueado.id);
-      if (data.success) {
-        const favoritos = data.favoritos || [];
-        setFavoritosBackend(favoritos);
-        const ids = new Set(favoritos.map(f => f.id));
-        setFavoritosIds(ids);
-      } else {
-        setErrorFavoritos('Error al cargar favoritos');
-      }
-    } catch (err) {
-      setErrorFavoritos('No se pudo cargar favoritos');
-      console.error('Error:', err);
-    } finally {
-      setLoadingFavoritos(false);
-    }
-  }, [usuarioLogueado]);
+  // --- HELPER: FUSIONAR CON LOCALSTORAGE ---
+  // Esta función recupera likes y comentarios guardados y se los aplica a los posts frescos
+  const mergeWithLocalData = (listaPosts) => {
+      const savedData = JSON.parse(localStorage.getItem("pacha_feed_interactions")) || {};
+      return listaPosts.map(p => {
+          const saved = savedData[p.id];
+          if (!saved) return p;
+          return {
+              ...p,
+              // Si hay un like guardado, úsalo; si no, usa el original
+              likedByMe: saved.likedByMe !== undefined ? saved.likedByMe : p.likedByMe,
+              likes: saved.likes !== undefined ? saved.likes : p.likes,
+              // Si hay comentarios nuevos guardados, añádelos a los existentes
+              comentarios: saved.newComments ? [...p.comentarios, ...saved.newComments] : p.comentarios
+          };
+      });
+  };
 
-  const cargarResenas = useCallback(async () => {
-    if (!usuarioLogueado) return;
-    try {
-      setLoadingResenas(true);
-      setErrorResenas(null);
-      const data = await obtenerResenas(usuarioLogueado.id);
-      if (data.success) {
-        setResenasBackend(data.resenas || []);
-      } else {
-        setErrorResenas('Error al cargar reseñas');
-      }
-    } catch (err) {
-      setErrorResenas('No se pudo cargar reseñas');
-      console.error('Error:', err);
-    } finally {
-      setLoadingResenas(false);
-    }
-  }, [usuarioLogueado]);
-
-  const cargarCategorias = useCallback(async () => {
-    try {
-      setLoadingCategorias(true);
-      const data = await obtenerCategorias();
-      
-      if (data.success) {
-        setCategorias(data.categorias);
-        const lugaresPromises = data.categorias.map(cat => 
-          obtenerLugaresPorCategoria(cat.id)
-        );
-        const lugaresResults = await Promise.all(lugaresPromises);
-        
-        const lugaresMap = {};
-        data.categorias.forEach((cat, index) => {
-          if (lugaresResults[index].success) {
-            const lugaresBrutos = lugaresResults[index].lugares;
-            // FILTRO ANTI-DUPLICADOS
-            const lugaresUnicos = lugaresBrutos.filter((lugar, indice, self) => 
-              indice === self.findIndex((t) => (
-                t.nombre.trim().toLowerCase() === lugar.nombre.trim().toLowerCase()
-              ))
-            );
-            lugaresMap[cat.id] = lugaresUnicos;
-          }
-        });
-        setLugaresPorCategoria(lugaresMap);
-      }
-    } catch (err) {
-      console.error('Error al cargar categorías:', err);
-    } finally {
-      setLoadingCategorias(false);
-    }
-  }, []);
-
-  // Cargar usuario logueado
   useEffect(() => {
     const usuario = localStorage.getItem("usuario");
     if (usuario) {
-      setUsuarioLogueado(JSON.parse(usuario));
-    }
-  }, []);
+      const userObj = JSON.parse(usuario);
+      setUsuarioLogueado(userObj);
+      cargarSolicitudes(userObj.id);
 
-  // Obtener lugares del backend al cargar la página
-  useEffect(() => {
-    const cargarLugares = async () => {
-      try {
-        setLoadingLugares(true);
-        setErrorLugares(null);
-        const data = await obtenerLugares();
-        if (data.success) {
-          setLugaresBackend(data.lugares);
-        } else {
-          setErrorLugares('Error al cargar lugares del servidor');
+      const cargarFeed = async () => {
+        let todosLosPosts = [...POSTS_INICIALES];
+
+        try {
+           const data = await obtenerResenas(userObj.id); 
+           if (data && data.success && data.resenas) {
+              const misPosts = data.resenas.map(r => ({
+                  id: `review-${r.id}`, 
+                  userId: userObj.id,
+                  usuario: userObj.nombre,
+                  avatar: `https://ui-avatars.com/api/?name=${userObj.nombre}&background=ff6b00&color=fff`,
+                  ubicacion: r.lugar_nombre, 
+                  imagen: r.lugar_imagen || "https://www.peru.travel/Contenido/Atractivo/Imagen/es/10/1.1/Principal/Yanahuara.jpg", 
+                  descripcion: `⭐ ${r.calificacion}/5 — ${r.texto}`, 
+                  likes: 0, 
+                  likedByMe: false,
+                  fecha: r.created_at ? new Date(r.created_at).toLocaleDateString() : "Reciente",
+                  comentarios: []
+              }));
+              // Unimos reseñas + posts fijos
+              todosLosPosts = [...misPosts, ...POSTS_INICIALES];
+           }
+        } catch (error) {
+           console.error("Error al cargar reseñas:", error);
         }
-      } catch (err) {
-        setErrorLugares('No se pudo conectar con el servidor');
-        console.error('Error:', err);
-      } finally {
-        setLoadingLugares(false);
-      }
-    };
-    cargarLugares();
+
+        // APLICAMOS LA PERSISTENCIA (LIKES Y COMENTARIOS GUARDADOS)
+        setPosts(mergeWithLocalData(todosLosPosts));
+      };
+      cargarFeed();
+    } else {
+        // Si no hay usuario, solo mostramos los iniciales con datos guardados
+        setPosts(mergeWithLocalData(POSTS_INICIALES));
+    }
   }, []);
 
   useEffect(() => {
-    if (usuarioLogueado && usuarioLogueado.id) {
-      cargarFavoritos();
-    }
-  }, [usuarioLogueado, cargarFavoritos]);
-
-  useEffect(() => {
-    if (usuarioLogueado && usuarioLogueado.id) {
-      cargarResenas();
-    }
-  }, [usuarioLogueado, cargarResenas]);
-
-  useEffect(() => {
-    cargarCategorias();
-  }, [cargarCategorias]);
-
-  // --- EFECTO PARA SCROLL DEL CHAT ---
-  useEffect(() => {
-    if (chatOpen && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
+    if (chatOpen && messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
   }, [mensajes, chatOpen]);
 
-  // --- HANDLERS EXISTENTES ---
+  const cargarSolicitudes = async (miId) => {
+    try {
+        const data = await obtenerUsuarios();
+        if(data.success) {
+            const map = {};
+            data.usuarios.forEach(u => map[u.id] = u.nombre);
+            setUsuariosMap(map);
+        }
+    } catch(e) {}
+    const relaciones = JSON.parse(localStorage.getItem("pacha_relaciones")) || [];
+    setSolicitudes(relaciones.filter(r => r.to === miId && r.status === 'pending'));
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("usuario");
     localStorage.removeItem("recordarSesion");
     navigate("/login");
   };
 
-  const handleToggleFavorito = async (lugarId) => {
-    if (!usuarioLogueado) {
-      alert('Debes iniciar sesión para agregar favoritos');
-      return;
-    }
-    try {
-      if (favoritosIds.has(lugarId)) {
-        const favorito = favoritosBackend.find(f => f.id === lugarId);
-        if (favorito) {
-          await eliminarFavorito(favorito.favorito_id);
-          setFavoritosIds(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(lugarId);
-            return newSet;
-          });
-          setFavoritosBackend(prev => prev.filter(f => f.id !== lugarId));
-        }
-      } else {
-        const data = await agregarFavorito(usuarioLogueado.id, lugarId);
-        if (data.success) {
-          await cargarFavoritos();
-        }
-      }
-    } catch (err) {
-      console.error('Error al toggle favorito:', err);
-      alert('Error al actualizar favorito');
-    }
+  // --- LIKES CON PERSISTENCIA ---
+  const handleLike = (postId) => {
+    setPosts(prevPosts => {
+        const updatedPosts = prevPosts.map(post => {
+            if (post.id === postId) {
+                const newLikedState = !post.likedByMe;
+                const newLikes = newLikedState ? post.likes + 1 : post.likes - 1;
+                
+                // Guardar en LocalStorage
+                const savedData = JSON.parse(localStorage.getItem("pacha_feed_interactions")) || {};
+                savedData[postId] = {
+                    ...(savedData[postId] || {}),
+                    likedByMe: newLikedState,
+                    likes: newLikes
+                };
+                localStorage.setItem("pacha_feed_interactions", JSON.stringify(savedData));
+
+                return { ...post, likedByMe: newLikedState, likes: newLikes };
+            }
+            return post;
+        });
+        return updatedPosts;
+    });
   };
 
-  const handleAbrirModalResena = (lugar) => {
-    if (!usuarioLogueado) {
-      alert('Debes iniciar sesión para escribir reseñas');
-      return;
+  const handleToggleComentarios = (postId) => {
+    setMostrarComentarios(prev => ({ ...prev, [postId]: !prev[postId] }));
+  };
+
+  // --- COMENTARIOS CON PERSISTENCIA ---
+  const handlePostComentario = (postId) => {
+    const texto = comentarioInputs[postId];
+    if (!texto || !texto.trim()) return;
+    
+    const nuevoComentario = { user: usuarioLogueado ? usuarioLogueado.nombre : "Yo", text: texto };
+    
+    setPosts(prevPosts => {
+        const updatedPosts = prevPosts.map(p => {
+            if (p.id === postId) {
+                // Guardar en LocalStorage
+                const savedData = JSON.parse(localStorage.getItem("pacha_feed_interactions")) || {};
+                const postData = savedData[postId] || {};
+                const newComments = [...(postData.newComments || []), nuevoComentario];
+                
+                savedData[postId] = { ...postData, newComments };
+                localStorage.setItem("pacha_feed_interactions", JSON.stringify(savedData));
+
+                return { ...p, comentarios: [...p.comentarios, nuevoComentario] };
+            }
+            return p;
+        });
+        return updatedPosts;
+    });
+
+    setComentarioInputs(prev => ({ ...prev, [postId]: "" }));
+    setMostrarComentarios(prev => ({ ...prev, [postId]: true }));
+  };
+
+  const toggleMenu = (postId) => setMenuAbiertoId(menuAbiertoId === postId ? null : postId);
+
+  const responderSolicitud = (id, aceptar) => {
+    const relaciones = JSON.parse(localStorage.getItem("pacha_relaciones")) || [];
+    const nuevas = relaciones.map(r => r.id === id ? { ...r, status: aceptar ? 'accepted' : 'rejected' } : r);
+    if (!aceptar) { 
+        const filtradas = relaciones.filter(r => r.id !== id);
+        localStorage.setItem("pacha_relaciones", JSON.stringify(filtradas));
+    } else {
+        localStorage.setItem("pacha_relaciones", JSON.stringify(nuevas));
+        alert("¡Nuevo amigo agregado!");
     }
-    setLugarSeleccionado(lugar);
-    setMostrarModalResena(true);
-    setNuevaResena({ texto: '', calificacion: 5 });
+    setSolicitudes(prev => prev.filter(s => s.id !== id));
   };
 
-  const handleCerrarModalResena = () => {
-    setMostrarModalResena(false);
-    setLugarSeleccionado(null);
-    setNuevaResena({ texto: '', calificacion: 5 });
-  };
-
-  const handleCrearResena = async (e) => {
-    e.preventDefault();
-    if (!nuevaResena.texto.trim()) {
-      alert('Por favor escribe tu reseña');
-      return;
-    }
-    try {
-      const data = await crearResena(
-        usuarioLogueado.id,
-        lugarSeleccionado.id,
-        nuevaResena.texto,
-        nuevaResena.calificacion
-      );
-      if (data.success) {
-        alert('¡Reseña creada exitosamente!');
-        handleCerrarModalResena();
-        await cargarResenas();
-      }
-    } catch (err) {
-      console.error('Error al crear reseña:', err);
-      alert('Error al crear reseña');
-    }
-  };
-
-  // --- HANDLERS DEL CHATBOT ---
-  const toggleChat = () => {
-    console.log("Chat toggleado. Estado nuevo:", !chatOpen);
-    setChatOpen(!chatOpen);
-  };
-
-  const handleEnviarMensaje = (e) => {
+  const handleChatSubmit = (e) => {
     e.preventDefault();
     if (!inputText.trim()) return;
-
-    const nuevoMsg = { id: Date.now(), text: inputText, sender: 'user' };
-    setMensajes(prev => [...prev, nuevoMsg]);
+    setMensajes(prev => [...prev, { id: Date.now(), text: inputText, sender: 'user' }]);
     setInputText("");
-
-    // Respuesta simulada
-    setTimeout(() => {
-      const respuestas = [
-        "¡Qué interesante! Arequipa tiene mucho que ofrecer.",
-        "Estoy buscando esa información en mi base de datos...",
-        "Te recomiendo visitar el Cañón del Colca, es impresionante."
-      ];
-      const randomResp = respuestas[Math.floor(Math.random() * respuestas.length)];
-      
-      setMensajes(prev => [...prev, { 
-        id: Date.now() + 1, 
-        text: randomResp, 
-        sender: 'bot' 
-      }]);
-    }, 1000);
+    setTimeout(() => setMensajes(prev => [...prev, { id: Date.now()+1, text: "¡Interesante elección! ¿Te gustaría saber precios?", sender: 'bot' }]), 1000);
   };
 
   return (
     <div className="foryou-container">
-      {/* Header con navegación */}
       <header className="foryou-header">
-        <div className="logo">
-          <div className="mountain"></div>
-          <h1>
-            <span className="black">Pacha</span>
-            <span className="orange">Qutec</span>
-          </h1>
+        <div className="header-content-wrapper">
+            <div className="logo" onClick={() => window.scrollTo(0,0)}>
+                <div className="mountain"></div>
+                <h1><span className="black">Pacha</span><span className="orange">Qutec</span></h1>
+            </div>
+            <nav className="navigation">
+                <button onClick={() => navigate("/foryou")} className="nav-link active">Inicio</button>
+                <button onClick={() => navigate("/lugares")} className="nav-link">Lugares</button>
+                <button onClick={() => navigate("/favoritos")} className="nav-link">Favoritos</button>
+                <button onClick={() => navigate("/rutas")} className="nav-link">Rutas</button>
+                <button onClick={() => navigate("/reseñas")} className="nav-link">Reseñas</button>
+                <button onClick={() => navigate("/contactanos")} className="nav-link">Contáctanos</button>
+                {usuarioLogueado && (
+                    <span className="user-welcome" onClick={() => navigate('/perfil')} title="Ver Perfil">
+                        <div className="user-avatar-placeholder">{usuarioLogueado.nombre.charAt(0)}</div>
+                        <span className="user-name-text">{usuarioLogueado.nombre.split(' ')[0]}</span>
+                    </span>
+                )}
+                <button onClick={() => navigate("/rdf")} className="nav-link nav-rdf">RDF</button>
+                <button onClick={handleLogout} className="nav-link logout-btn">Salir</button>
+            </nav>
         </div>
-
-        <nav className="navigation">
-          <button onClick={() => navigate("/foryou")} className="nav-link">Inicio</button>
-          <button onClick={() => navigate("/lugares")} className="nav-link">Lugares</button>
-          <button onClick={() => navigate("/favoritos")} className="nav-link">Favoritos</button>
-          <button onClick={() => navigate("/rutas")} className="nav-link" title="Ver mapa de rutas">Rutas</button>
-          <button onClick={() => navigate("/reseñas")} className="nav-link">Reseñas</button>
-          <button onClick={() => navigate("/contactanos")} className="nav-link">Contáctanos</button>
-          {usuarioLogueado && (
-            <span className="user-welcome">
-              Hola, <strong>{usuarioLogueado.nombre}</strong>
-            </span>
-          )}
-          <button onClick={() => navigate("/rdf")} className="nav-link nav-rdf" title="Ver datos en formato RDF">🌐 RDF</button>
-          <button onClick={handleLogout} className="nav-link logout-btn">Salir</button>
-        </nav>
       </header>
 
-      {/* Contenido principal */}
-      <main className="foryou-main">
-        {/* Banner Cañon del Colca */}
-        <section 
-          className="banner-colca-con-imagen"
-          style={{ 
-            backgroundImage: `url(https://www.peru.travel/Contenido/Atractivo/Imagen/es/8/1.2/Principal/Ca%C3%B1on%20del%20Colca.jpg)`
-          }}
-        >
-          <div className="banner-overlay">
-            <div className="banner-content-con-imagen">
-              <span className="banner-subtitle">Destino Destacado</span>
-              <h1>Cañón del Colca</h1>
-              <button className="ver-mas-btn-con-imagen">Explorar ahora</button>
-            </div>
-          </div>
-        </section>
-
-        {/* Sección Lugares por Categorías */}
-        <section className="lugares-section">
-          <div className="section-header-container">
-             <h2 className="section-title">🏛️ Descubre Arequipa</h2>
-             <p className="section-subtitle">Explora los tesoros escondidos de la ciudad blanca</p>
-          </div>
-          
-          {loadingCategorias && (
-            <div className="loading-container">
-              <div className="spinner"></div>
-              <p>Cargando experiencias...</p>
-            </div>
-          )}
-          
-          {!loadingCategorias && categorias.length > 0 && (
-            <div className="categorias-container">
-              {categorias.map((categoria) => (
-                <div key={categoria.id} className={`categoria-section ${categoriaExpandida === categoria.id ? 'expanded' : ''}`}>
-
-                  <div 
-                    className="categoria-header"
-                    onClick={() => setCategoriaExpandida(
-                      categoriaExpandida === categoria.id ? null : categoria.id
-                    )}
-                    style={{ borderLeft: `4px solid ${categoria.color || '#ff6b00'}` }}
-                  >
-                    <div className="categoria-info">
-                      <span className="categoria-icono">{categoria.icono}</span>
-                      <div>
-                        <h3 className="categoria-nombre">{categoria.nombre}</h3>
-                        <p className="categoria-descripcion">{categoria.descripcion}</p>
+      <main className="feed-layout">
+        {posts.map(post => (
+          <article key={post.id} className="elegant-card">
+            <div className="card-header">
+              <div className="user-meta">
+                <img src={post.avatar} alt={post.usuario} className="avatar-small" />
+                <div className="user-text">
+                  <span className="username">{post.usuario}</span>
+                  <span className="location">{post.ubicacion}</span>
+                </div>
+              </div>
+              <div className="menu-trigger-container">
+                  <button className="dots-btn" onClick={(e) => { e.stopPropagation(); toggleMenu(post.id); }}>•••</button>
+                  {menuAbiertoId === post.id && (
+                      <div className="dropdown-menu">
+                          <button onClick={() => navigate(`/perfil/${post.userId}`)}>Ver Perfil</button>
+                          <button className="btn-cancel" onClick={() => setMenuAbiertoId(null)}>Cancelar</button>
                       </div>
-                    </div>
-                    <div className="categoria-toggle">
-                      <span className="lugares-count">
-                        {lugaresPorCategoria[categoria.id]?.length || 0} lugares
-                      </span>
-                      <span className={`toggle-icon ${categoriaExpandida === categoria.id ? 'rotated' : ''}`}>▼</span>
-                    </div>
-                  </div>
-
-                  {/* Lugares de la categoría */}
-                  <div className={`categoria-lugares-wrapper ${categoriaExpandida === categoria.id ? 'open' : ''}`}>
-                    {lugaresPorCategoria[categoria.id] && (
-                        <div className="lugares-grid categoria-lugares-grid">
-                        {lugaresPorCategoria[categoria.id].map((lugar) => (
-                            <div key={lugar.id} className="lugar-card">
-                            <button
-                                className={`favorito-btn ${favoritosIds.has(lugar.id) ? 'is-favorito' : ''}`}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleToggleFavorito(lugar.id);
-                                }}
-                                title={favoritosIds.has(lugar.id) ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-                            >
-                                {favoritosIds.has(lugar.id) ? '❤️' : '🤍'}
-                            </button>
-                            
-                            <div className="lugar-image">
-                                <img src={lugar.imagen_url} alt={lugar.nombre} loading="lazy" />
-                                <div className="lugar-overlay-gradient"></div>
-                            </div>
-                            
-                            <div className="lugar-content">
-                                <h3>{lugar.nombre}</h3>
-                                <p className="lugar-desc">{lugar.descripcion}</p>
-                                <button
-                                className="review-btn"
-                                onClick={() => handleAbrirModalResena(lugar)}
-                                >
-                                ✍️ Escribir reseña
-                                </button>
-                            </div>
-                            </div>
-                        ))}
-                        </div>
-                    )}
-                  </div>
-                </div>
-              ))}
+                  )}
+              </div>
             </div>
-          )}
-        </section>
+            <div className="card-image" onDoubleClick={() => handleLike(post.id)}>
+               <img src={post.imagen} alt={post.descripcion} />
+               <div className={`heart-overlay ${post.likedByMe ? 'active' : ''}`}>❤️</div>
+            </div>
+            <div className="card-actions">
+               <div className="action-row">
+                   <button onClick={() => handleLike(post.id)} className={`icon-btn ${post.likedByMe ? 'liked' : ''}`}>
+                       <svg width="24" height="24" viewBox="0 0 24 24" fill={post.likedByMe ? "#ff4757" : "none"} stroke={post.likedByMe ? "#ff4757" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                       </svg>
+                   </button>
+                   <button onClick={() => handleToggleComentarios(post.id)} className="icon-btn">
+                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                           <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                       </svg>
+                   </button>
+               </div>
+               <div className="likes-count">{post.likes} Me gusta</div>
+            </div>
+            <div className="card-caption">
+                <span className="caption-username">{post.usuario}</span>
+                <span className="caption-text"> {post.descripcion}</span>
+                <div className="time-ago">{post.fecha}</div>
+            </div>
+            {mostrarComentarios[post.id] && (
+                <div className="comments-section">
+                    {post.comentarios.map((c, idx) => (
+                        <div key={idx} className="comment-bubble"><strong>{c.user}</strong> {c.text}</div>
+                    ))}
+                    <div className="comment-input-area">
+                        <input type="text" placeholder="Añade un comentario..." value={comentarioInputs[post.id] || ""} onChange={(e) => setComentarioInputs({...comentarioInputs, [post.id]: e.target.value})} onKeyPress={(e) => e.key === 'Enter' && handlePostComentario(post.id)} />
+                        <button onClick={() => handlePostComentario(post.id)} disabled={!comentarioInputs[post.id]}>Publicar</button>
+                    </div>
+                </div>
+            )}
+          </article>
+        ))}
       </main>
-      
-      {/* 1. VENTANA DEL CHAT */}
-      {chatOpen && (
-        <div className="chat-window-fixed">
-          <div className="chat-header">
-            <div className="chat-header-info">
-              <div className="chat-avatar-circle">🤖</div>
-              <div>
-                <span className="chat-title">Asistente Pacha</span>
-                <span className="chat-status">En línea</span>
-              </div>
-            </div>
-            <button className="chat-close-btn" onClick={toggleChat}>×</button>
-          </div>
 
-          <div className="chat-body">
-            {mensajes.map((msg) => (
-              <div key={msg.id} className={`chat-message ${msg.sender === 'user' ? 'message-user' : 'message-bot'}`}>
-                <div className="message-bubble">{msg.text}</div>
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
-
-          <form className="chat-input-area" onSubmit={handleEnviarMensaje}>
-            <input 
-              type="text" 
-              placeholder="Escribe tu duda..." 
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              autoFocus
-            />
-            <button type="submit" className="chat-send-btn">➤</button>
-          </form>
-        </div>
-      )}
-
-      {/* 2. BOTÓN DE ACTIVACIÓN */}
-      <div 
-        className="chatbot-trigger-wrapper"
-        onClick={toggleChat}
-        title="Abrir chat de ayuda"
-      >
-        {!chatOpen && (
-          <div className="chat-tooltip-bubble">
-            ¿Necesitas ayuda con tu viaje?
-          </div>
-        )}
-        <button className={`chatbot-float-btn ${chatOpen ? 'open' : ''}`}>
-          {chatOpen ? (
-            <span style={{fontSize: '24px', fontWeight: 'bold', color: 'white'}}>✕</span>
-          ) : (
-            <span style={{fontSize: '28px'}}>💬</span>
-          )}
-        </button>
+      <div className="inbox-wrapper">
+         <button className={`inbox-btn ${solicitudes.length > 0 ? 'pulse' : ''}`} onClick={() => setShowInbox(!showInbox)} title="Notificaciones">
+             <span style={{fontSize: '1.2rem'}}>🔔</span>
+             {solicitudes.length > 0 && <span className="badge">{solicitudes.length}</span>}
+         </button>
+         {showInbox && (
+             <div className="inbox-panel">
+                 <div className="inbox-header">
+                     <h4>Notificaciones</h4>
+                     <button className="close-mini" onClick={() => setShowInbox(false)}>✕</button>
+                 </div>
+                 <div className="inbox-content">
+                     {solicitudes.length === 0 ? (
+                         <div className="empty-state">📭 <p>No tienes notificaciones.</p></div>
+                     ) : (
+                         solicitudes.map(sol => (
+                             <div key={sol.id} className="request-card">
+                                 <div className="req-info"><strong>{usuariosMap[sol.from]}</strong> quiere conectar</div>
+                                 <div className="req-actions">
+                                     <button className="btn-confirm" onClick={() => responderSolicitud(sol.id, true)}>Confirmar</button>
+                                     <button className="btn-delete" onClick={() => responderSolicitud(sol.id, false)}>✕</button>
+                                 </div>
+                             </div>
+                         ))
+                     )}
+                 </div>
+             </div>
+         )}
       </div>
-      
-      {/* Modal para crear reseña */}
-      {mostrarModalResena && (
-        <div className="modal-overlay" onClick={handleCerrarModalResena}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-                <h2>✍️ Nueva Reseña</h2>
-                <button className="modal-close" onClick={handleCerrarModalResena}>&times;</button>
-            </div>
-            
-            <p className="modal-subtitle">Cuéntanos tu experiencia en <strong>{lugarSeleccionado?.nombre}</strong></p>
-            
-            <form onSubmit={handleCrearResena}>
-              <div className="form-group">
-                <label>Calificación</label>
-                <div className="star-rating">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <span
-                      key={star}
-                      onClick={() => setNuevaResena({...nuevaResena, calificacion: star})}
-                      className={star <= nuevaResena.calificacion ? 'star filled' : 'star'}
-                    >
-                      ★
-                    </span>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="form-group">
-                <label>Tu opinión</label>
-                <textarea
-                  value={nuevaResena.texto}
-                  onChange={(e) => setNuevaResena({...nuevaResena, texto: e.target.value})}
-                  placeholder="¿Qué fue lo que más te gustó? ¿Qué se podría mejorar?"
-                  rows={5}
-                  required
-                />
-              </div>
-              
-              <div className="modal-actions">
-                <button type="button" onClick={handleCerrarModalResena} className="btn-cancel">Cancelar</button>
-                <button type="submit" className="btn-submit">Publicar reseña</button>
-              </div>
-            </form>
-          </div>
+
+      <div className="chatbot-wrapper">
+         {!chatOpen && <div className="chat-hint">¿Necesitas ayuda?</div>}
+         <button className={`chat-fab ${chatOpen ? 'open' : ''}`} onClick={() => setChatOpen(!chatOpen)}>
+            {chatOpen ? '✕' : '💬'}
+         </button>
+      </div>
+
+      {chatOpen && (
+        <div className="chat-window">
+             <div className="chat-top">
+                 <div className="chat-brand">🤖 Asistente Pacha</div>
+                 <button className="chat-minimize" onClick={() => setChatOpen(false)}>−</button>
+             </div>
+             <div className="chat-msgs">
+                 {mensajes.map(m => (
+                     <div key={m.id} className={`msg ${m.sender}`}><span>{m.text}</span></div>
+                 ))}
+                 <div ref={messagesEndRef} />
+             </div>
+             <form className="chat-form" onSubmit={handleChatSubmit}>
+                 <input value={inputText} onChange={e => setInputText(e.target.value)} placeholder="Escribe..." autoFocus/>
+                 <button type="submit">Enviar</button>
+             </form>
         </div>
       )}
-
-      {/* Footer */}
-      <footer className="foryou-footer">
-        <div className="footer-content">
-            <div className="footer-logo">
-                <span className="black">Pacha</span><span className="orange">Qutec</span>
-            </div>
-            <p>Desarrollo Basado en Plataformas - Universidad Católica San Pablo</p>
-            <p className="copyright">© 2025 Todos los derechos reservados.</p>
-        </div>
-      </footer>
     </div>
   );
 }

@@ -47,29 +47,32 @@ function FavoritosPage() {
     navigate("/foryou");
   };
 
-  const handleEliminarFavorito = async (favoritoId, lugarId) => {
-    try {
+  const handleEliminarFavorito = async (favoritoId) => {
+    if(!window.confirm("¿Deseas eliminar este lugar de tu colección?")) return;
 
+    try {
       await eliminarFavorito(favoritoId);
       setFavoritos(prev => prev.filter(f => f.favorito_id !== favoritoId));
     } catch (err) {
       console.error('Error al eliminar favorito:', err);
-      alert('Error al eliminar favorito');
+      // Fallback visual
+      setFavoritos(prev => prev.filter(f => f.favorito_id !== favoritoId));
     }
   };
 
   const handleLugarClick = (lugar) => {
-
-    console.log("Ver detalles del lugar:", lugar);
+    console.log("Navegar a:", lugar.nombre);
   };
 
   return (
     <div className="favorites-layout">
-      {/* Header */}
+      {/* FONDO SUTIL */}
+      <div className="favorites-bg-layer"></div>
+
+      {/* HEADER CORREGIDO */}
       <header className="favorites-header">
         <div className="header-content">
-
-          <div className="brand-logo">
+          <div className="brand-logo" onClick={handleVolver}>
             <div className="mountain-icon"></div>
             <h1>
               <span className="brand-pacha">Pacha</span>
@@ -78,8 +81,9 @@ function FavoritosPage() {
           </div>
 
           <div className="header-center">
-            <h2 className="page-title">Mi Lista de Deseos</h2>
+            <h2 className="page-title">Mi Colección</h2>
           </div>
+          
           <button onClick={handleVolver} className="btn-back">
             <span>←</span> Volver
           </button>
@@ -87,12 +91,19 @@ function FavoritosPage() {
       </header>
 
       <main className="favorites-main">
+        {/* TITULO DE LA SECCIÓN */}
+        <div className="main-title-section">
+            <h1>Tus Destinos Guardados</h1>
+            <p>Lugares que te inspiran a viajar.</p>
+        </div>
+
         {/* Estado: No logueado */}
         {!usuarioLogueado && (
           <div className="state-box">
             <div className="icon-large">🔒</div>
             <h3>Colección Privada</h3>
             <p>Inicia sesión para ver tus destinos guardados.</p>
+            <button onClick={() => navigate("/login")} className="btn-primary-small">Iniciar Sesión</button>
           </div>
         )}
         
@@ -100,7 +111,7 @@ function FavoritosPage() {
         {usuarioLogueado && loading && (
           <div className="loader-container">
             <div className="spinner"></div>
-            <p>Cargando tu colección...</p>
+            <p>Recuperando tus tesoros...</p>
           </div>
         )}
         
@@ -118,12 +129,12 @@ function FavoritosPage() {
           <div className="state-box empty">
             <div className="icon-large">💔</div>
             <h3>Tu lista está vacía</h3>
-            <p>Explora lugares y dale al corazón para guardarlos aquí.</p>
-            <button onClick={handleVolver} className="btn-primary-small">Explorar Lugares</button>
+            <p>Explora lugares y guárdalos para planear tu próxima aventura.</p>
+            <button onClick={() => navigate("/lugares")} className="btn-primary-small">Explorar Lugares</button>
           </div>
         )}
         
-        {/* Grid de Favoritos Estilo Wishlist */}
+        {/* Grid de Favoritos */}
         {usuarioLogueado && !loading && !error && favoritos.length > 0 && (
           <div className="favorites-grid">
             {favoritos.map((favorito) => (
@@ -134,37 +145,37 @@ function FavoritosPage() {
               >
                 <div className="fav-image-container">
                   <img src={favorito.imagen_url} alt={favorito.nombre} loading="lazy" />
+                  <div className="fav-gradient-overlay"></div>
                   
-                  {/* Botón Eliminar Flotante Elegante */}
+                  <div className="card-top-badges">
+                     <span className="category-badge">{favorito.categoria}</span>
+                  </div>
+
+                  {/* Botón Eliminar Flotante */}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleEliminarFavorito(favorito.favorito_id, favorito.id);
+                      handleEliminarFavorito(favorito.favorito_id);
                     }}
-                    className="btn-remove"
+                    className="btn-remove-fav"
                     title="Eliminar de favoritos"
                   >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M3 6h18"></path>
-                      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                     </svg>
                   </button>
-                  
-                  <div className="fav-overlay">
-                    <span className="category-badge">{favorito.categoria}</span>
-                  </div>
                 </div>
                 
                 <div className="fav-content">
                   <h3>{favorito.nombre}</h3>
                   <p className="fav-desc">
                     {favorito.descripcion 
-                      ? (favorito.descripcion.length > 80 ? favorito.descripcion.substring(0, 80) + "..." : favorito.descripcion)
+                      ? (favorito.descripcion.length > 70 ? favorito.descripcion.substring(0, 70) + "..." : favorito.descripcion)
                       : "Un destino increíble esperando por ti."}
                   </p>
                   <div className="fav-footer">
-                    <span className="action-link">Ver detalles &rarr;</span>
+                    <span className="view-more">Ver detalles →</span>
                   </div>
                 </div>
               </div>
@@ -174,7 +185,7 @@ function FavoritosPage() {
       </main>
 
       <footer className="favorites-footer">
-        <p>© 2025 PachaQutec | UCSP</p>
+        <p>© 2025 PachaQutec | Arequipa</p>
       </footer>
     </div>
   );

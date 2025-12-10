@@ -11,6 +11,8 @@ import FavoritosPage from "./pages/FavoritosPage";
 import ReseñasPage from "./pages/ReseñasPage";
 import ContactanosPage from "./pages/ContactanosPage";
 import Rutas from "./pages/Rutas";
+import Perfil from "./pages/Perfil";
+
 
 function App() {
   return (
@@ -27,6 +29,7 @@ function App() {
         <Route path="/reseñas" element={<ReseñasPage />} />
         <Route path="/contactanos" element={<ContactanosPage />} />
         <Route path="/rutas" element={<Rutas />} />
+        <Route path="/perfil/:id?" element={<Perfil />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>

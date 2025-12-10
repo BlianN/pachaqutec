@@ -166,4 +166,16 @@ export const obtenerLugaresPorCategoria = async (categoriaId) => {
   }
 };
 
+// CORRECCIÓN: Usamos 'api' (axios) en lugar de fetch para aprovechar la configuración base
+export const obtenerResenasUsuario = async (usuarioId) => {
+  try {
+    const response = await api.get(`/resenas/usuario/${usuarioId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error al obtener reseñas de usuario:", error);
+    throw error;
+  }
+};
+
+
 export default api;

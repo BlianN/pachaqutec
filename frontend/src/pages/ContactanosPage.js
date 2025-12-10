@@ -15,8 +15,7 @@ function ContactanosPage() {
       nombre: "Mijael Pol Escobar Aguilar",
       correo: "mijael.escobar@ucsp.edu.pe",
       linkedin: "https://linkedin.com/in/mijael-escobar",
-      facebook: "https://facebook.com/mijael.escobar",
-      instagram: "https://instagram.com/mijael.escobar",
+      // Facebook e Instagram eliminados según solicitud
       telefono: "+51 123 456 789",
       rol: "Desarrollador backend y encargado de la IA"
     },
@@ -25,8 +24,8 @@ function ContactanosPage() {
       nombre: "Diego Miguel Calancho Llerena",
       correo: "diego.calancho@ucsp.edu.pe",
       linkedin: "https://linkedin.com/in/diego-calancho",
-      facebook: "https://facebook.com/diego.calancho",
       instagram: "https://instagram.com/diego.calancho",
+      // Facebook eliminado
       telefono: "+51 987 654 321",
       rol: "Desarrollador Backend"
     },
@@ -35,8 +34,8 @@ function ContactanosPage() {
       nombre: "Rodrigo Fredy Sulla Gonzales",
       correo: "rodrigo.sulla@ucsp.edu.pe",
       linkedin: "https://linkedin.com/in/rodrigo-sulla",
-      facebook: "https://facebook.com/rodrigo.sulla",
       instagram: "https://instagram.com/rodrigo.sulla",
+      // Facebook eliminado
       telefono: "+51 456 789 123",
       rol: "Desarrollador Frontend y de interfaces responsivas"
     }
@@ -101,15 +100,22 @@ function ContactanosPage() {
                 </div>
 
                 <div className="social-row">
-                  <a href={integrante.linkedin} target="_blank" rel="noopener noreferrer" className="social-btn linkedin">
-                    LN
-                  </a>
-                  <a href={integrante.facebook} target="_blank" rel="noopener noreferrer" className="social-btn facebook">
-                    FB
-                  </a>
-                  <a href={integrante.instagram} target="_blank" rel="noopener noreferrer" className="social-btn instagram">
-                    IG
-                  </a>
+                  {/* Renderizado condicional: Solo muestra si existe el link */}
+                  {integrante.linkedin && (
+                    <a href={integrante.linkedin} target="_blank" rel="noopener noreferrer" className="social-btn linkedin" title="LinkedIn">
+                      LN
+                    </a>
+                  )}
+                  {integrante.facebook && (
+                    <a href={integrante.facebook} target="_blank" rel="noopener noreferrer" className="social-btn facebook" title="Facebook">
+                      FB
+                    </a>
+                  )}
+                  {integrante.instagram && (
+                    <a href={integrante.instagram} target="_blank" rel="noopener noreferrer" className="social-btn instagram" title="Instagram">
+                      IG
+                    </a>
+                  )}
                 </div>
               </div>
             </div>
