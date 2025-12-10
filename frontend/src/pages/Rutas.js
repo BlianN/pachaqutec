@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { GoogleMap, LoadScript, Marker, InfoWindow, DirectionsRenderer } from "@react-google-maps/api";
 import { obtenerLugares, obtenerCategorias } from "../services/api";
 import { AREQUIPA_CENTER, defaultMapOptions } from "../services/ggmaps";
@@ -7,6 +7,7 @@ import "./Rutas.css";
 
 function Rutas() {
   const navigate = useNavigate();
+  const location = useLocation();
   const mapRef = useRef(null);
   
   // Estados
@@ -25,6 +26,30 @@ function Rutas() {
   useEffect(() => {
     cargarDatos();
   }, []);
+
+  // Recibir ruta del chatbot
+  useEffect(() => {
+    if (location.state?.rutaGenerada) {
+      const rutaDelChat = location.state.rutaGenerada;
+      
+      // Convertir formato: { lat, lon } → { lat, lng }
+      const lugaresParaMapa = rutaDelChat.map(lugar => ({
+        id: lugar.id,
+        nombre: lugar.nombre,
+        lat: lugar.lat,
+        lng: lugar.lon || lugar.lng // Backend puede enviar lon o lng
+      }));
+      
+      setLugaresRuta(lugaresParaMapa);
+      
+      // Opcional: Mostrar notificación
+      if (location.state.mensajeOriginal) {
+        setTimeout(() => {
+          alert(`✅ Ruta generada para: "${location.state.mensajeOriginal}"`);
+        }, 500);
+      }
+    }
+  }, [location.state]);
 
   const cargarDatos = async () => {
     try {
